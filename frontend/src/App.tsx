@@ -38,8 +38,8 @@ export default function App() {
     setInitialPose({ ...p.initial_pose });
   };
 
-  const onLoaded = (pts: Point[], name: string) => {
-    setPoints(pts); setFileName(name); setIgnored(0);
+  const onLoaded = (pts: Point[], name: string, ignored: number) => {
+    setPoints(pts); setFileName(name); setIgnored(ignored);
   };
 
   const exportToPathview = async () => {

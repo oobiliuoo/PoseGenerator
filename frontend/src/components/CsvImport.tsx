@@ -1,29 +1,26 @@
-import { useRef } from 'react';
 import { parseCsvPoints } from '../lib/csv';
 import type { Point } from '../types';
 
 interface Props {
-  onLoaded: (points: Point[], fileName: string) => void;
+  onLoaded: (points: Point[], fileName: string, ignored: number) => void;
   fileName: string | null;
   pointCount: number;
   ignored: number;
 }
 
 export function CsvImport({ onLoaded, fileName, pointCount, ignored }: Props) {
-  const inputRef = useRef<HTMLInputElement>(null);
   const handle = (file: File) => {
     const reader = new FileReader();
     reader.onload = () => {
       const text = String(reader.result ?? '');
       const res = parseCsvPoints(text);
-      onLoaded(res.points, file.name);
+      onLoaded(res.points, file.name, res.ignored);
     };
     reader.readAsText(file);
   };
   return (
     <div className="csv-import">
       <input
-        ref={inputRef}
         type="file"
         accept=".csv,text/csv"
         onChange={e => { const f = e.target.files?.[0]; if (f) handle(f); }}

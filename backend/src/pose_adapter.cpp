@@ -1,23 +1,6 @@
 #include "pose_adapter.h"
 #include <stdexcept>
 
-namespace {
-nlohmann::json paramsToJson(const mws::CorrugatedWeldPoseGenerator::Params& p) {
-    // Mirror library Params::toJson but with nlohmann::json (library Json type
-    // is nexus-internal; we re-encode here for our HTTP contract).
-    return {
-        {"curvature_threshold", p.curvature_threshold},
-        {"smooth_half_width", p.smooth_half_width},
-        {"tangent_smooth_window", p.tangent_smooth_window},
-        {"min_corner_region_length", p.min_corner_region_length},
-        {"output_mode", static_cast<int>(p.output_mode)},
-        {"max_pose_change_angle", p.max_pose_change_angle},
-        {"all_curve_threshold", p.all_curve_threshold},
-        {"keypoint_pose_angle_threshold", p.keypoint_pose_angle_threshold},
-    };
-}
-} // namespace
-
 bool parseGenerateRequest(const nlohmann::json& j, GenerateRequest& out) {
     try {
         out.points.clear();
