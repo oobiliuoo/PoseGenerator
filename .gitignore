@@ -1,0 +1,18 @@
+# Build artifacts
+backend/build/
+*.obj
+*.pdb
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# IDE / OS
+.vs/
+.vscode/
+*.user
+Thumbs.db
+.superpowers/
+
+# Local runtime (do not commit nexus DLL copies if any land here)
+*.dll
