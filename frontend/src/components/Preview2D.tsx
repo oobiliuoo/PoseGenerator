@@ -1,48 +1,103 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { PosePoint } from '../types';
-import { eulerToDirXY } from '../lib/euler';
+import { eulerToVec } from '../lib/euler';
 
 interface Props { points: PosePoint[]; }
 
 const W = 480, H = 360, PAD = 24, ARROW = 18;
 
-export function Preview2D({ points }: Props) {
-  const geom = useMemo(() => {
-    if (points.length === 0) return null;
-    const xs = points.map(p => p.x), ys = points.map(p => p.y);
-    const minX = Math.min(...xs), maxX = Math.max(...xs);
-    const minY = Math.min(...ys), maxY = Math.max(...ys);
-    const sx = (maxX - minX) || 1, sy = (maxY - minY) || 1;
-    const scale = Math.min((W - 2 * PAD) / sx, (H - 2 * PAD) / sy);
-    const ox = PAD + (W - 2 * PAD - sx * scale) / 2 - minX * scale;
-    const flat = (p: { x: number; y: number }) => ({ X: p.x * scale + ox, Y: H - PAD - (p.y - minY) * scale });
-    return points.map(p => {
-      const s = flat(p);
-      const d = eulerToDirXY(p.rx, p.ry, p.rz);
-      return { ...s, dx: d.dx * ARROW, dy: -d.dy * ARROW }; // screen Y down
-    });
-  }, [points]);
+type Plane = 'xy' | 'xz' | 'yz';
 
-  if (!geom) return <div className="preview-empty">导入 CSV 后显示预览</div>;
-  const line = geom.map(g => `${g.X},${g.Y}`).join(' ');
+interface Geom { X: number; Y: number; dx: number; dy: number; }
+
+function project(points: PosePoint[], plane: Plane): Geom[] | null {
+  if (points.length === 0) return null;
+  const axis = (p: PosePoint) => {
+    if (plane === 'xy') return { a: p.x, b: p.y };
+    if (plane === 'xz') return { a: p.x, b: p.z };
+    return { a: p.y, b: p.z }; // yz
+  };
+  const dirs = points.map(p => {
+    const v = eulerToVec(p.rx, p.ry, p.rz);
+    return plane === 'xy' ? { a: v.vx, b: v.vy }
+         : plane === 'xz' ? { a: v.vx, b: v.vz }
+         :                  { a: v.vy, b: v.vz };
+  });
+  const A = points.map(p => axis(p).a);
+  const B = points.map(p => axis(p).b);
+  const minA = Math.min(...A), maxA = Math.max(...A);
+  const minB = Math.min(...B), maxB = Math.max(...B);
+  const sA = (maxA - minA) || 1, sB = (maxB - minB) || 1;
+  const scale = Math.min((W - 2 * PAD) / sA, (H - 2 * PAD) / sB);
+  const ox = PAD + (W - 2 * PAD - sA * scale) / 2 - minA * scale;
+  const oy = PAD + (H - 2 * PAD - sB * scale) / 2 - minB * scale;
+  return points.map((p, i) => {
+    const { a, b } = axis(p);
+    const d = dirs[i];
+    return {
+      X: a * scale + ox,
+      Y: H - (b * scale + oy), // flip Y for screen coords
+      dx: d.a * ARROW,
+      dy: -d.b * ARROW,        // flip arrow Y to match screen
+    };
+  });
+}
+
+const PLANE_LABELS: Record<Plane, string> = {
+  xy: 'XY 俯视',
+  xz: 'XZ 正视',
+  yz: 'YZ 侧视',
+};
+
+export function Preview2D({ points }: Props) {
+  const [plane, setPlane] = useState<Plane>('xy');
+  const geom = useMemo(() => project(points, plane), [points, plane]);
+
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="preview2d">
-      {/* origin crosshair */}
-      <line x1={W / 2} y1={0} x2={W / 2} y2={H} stroke="#1d2128" strokeWidth={1} strokeDasharray="2 4" />
-      <line x1={0} y1={H / 2} x2={W} y2={H / 2} stroke="#1d2128" strokeWidth={1} strokeDasharray="2 4" />
-      {/* path */}
-      <polyline points={line} fill="none" stroke="#22d3ee" strokeWidth={2} opacity={0.9} />
-      {geom.map((g, i) => (
-        <g key={i}>
-          <circle cx={g.X} cy={g.Y} r={3} fill="#ffb627" stroke="#0a0c0f" strokeWidth={1} />
-          {(() => {
+    <div className="preview">
+      <div className="preview-toolbar">
+        <div className="seg" role="tablist" aria-label="投影平面">
+          {(['xy', 'xz', 'yz'] as Plane[]).map(p => (
+            <button
+              key={p}
+              role="tab"
+              aria-selected={plane === p}
+              className={plane === p ? 'seg-on' : ''}
+              onClick={() => setPlane(p)}
+            >{PLANE_LABELS[p]}</button>
+          ))}
+        </div>
+      </div>
+
+      {!geom ? (
+        <div className="preview-empty">导入 CSV 后显示预览</div>
+      ) : (
+        <svg viewBox={`0 0 ${W} ${H}`} className="preview2d" role="img" aria-label={`${PLANE_LABELS[plane]} 投影`}>
+          {/* origin crosshair */}
+          <line x1={W / 2} y1={0} x2={W / 2} y2={H} stroke="#1d2128" strokeWidth={1} strokeDasharray="2 4" />
+          <line x1={0} y1={H / 2} x2={W} y2={H / 2} stroke="#1d2128" strokeWidth={1} strokeDasharray="2 4" />
+          {/* path */}
+          <polyline
+            points={geom.map(g => `${g.X},${g.Y}`).join(' ')}
+            fill="none"
+            stroke="#22d3ee"
+            strokeWidth={2}
+            opacity={0.9}
+          />
+          {geom.map((g, i) => {
             const len = Math.hypot(g.dx, g.dy);
-            if (len < 1e-3) return null;
-            return <line x1={g.X} y1={g.Y} x2={g.X + g.dx} y2={g.Y + g.dy}
-              stroke="#ffb627" strokeWidth={2} opacity={0.8} />;
-          })()}
-        </g>
-      ))}
-    </svg>
+            return (
+              <g key={i}>
+                <circle cx={g.X} cy={g.Y} r={3} fill="#ffb627" stroke="#0a0c0f" strokeWidth={1} />
+                {len >= 1e-3 && (
+                  <line x1={g.X} y1={g.Y} x2={g.X + g.dx} y2={g.Y + g.dy}
+                    stroke="#ffb627" strokeWidth={2} opacity={0.8} />
+                )}
+              </g>
+            );
+          })}
+        </svg>
+      )}
+    </div>
   );
 }

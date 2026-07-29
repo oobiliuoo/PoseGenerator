@@ -1,5 +1,15 @@
 import type { PosePoint } from '../types';
 
+// Probe pathview via Vite proxy. Returns true when the server is reachable.
+export async function healthCheckPathview(): Promise<boolean> {
+  try {
+    const r = await fetch('/api/paths', { method: 'GET' });
+    return r.ok;
+  } catch {
+    return false;
+  }
+}
+
 // POST points to pathview's /api/paths via Vite proxy. Returns new path id.
 export async function sendToPathview(points: PosePoint[], sourceFile: string): Promise<number> {
   const now = new Date();
