@@ -14,7 +14,7 @@ function NumControl(props: {
 }) {
   const { label, value, min, max, step, onChange, disabled, hint } = props;
   return (
-    <div className="ctrl" style={{ opacity: disabled ? 0.4 : 1 }}>
+    <div className={`ctrl${disabled ? ' is-disabled' : ''}`}>
       <label>{label}{hint ? <span className="hint"> ({hint})</span> : null}</label>
       <div className="ctrl-row">
         <input type="range" min={min} max={max} step={step} value={value}
@@ -22,7 +22,7 @@ function NumControl(props: {
           onChange={e => onChange(parseFloat(e.target.value))} />
         <input type="number" min={min} max={max} step={step} value={value}
           disabled={disabled}
-          onChange={e => onChange(parseFloat(e.target.value))} style={{ width: 80 }} />
+          onChange={e => onChange(parseFloat(e.target.value))} />
       </div>
     </div>
   );

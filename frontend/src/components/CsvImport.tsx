@@ -27,9 +27,10 @@ export function CsvImport({ onLoaded, fileName, pointCount, ignored }: Props) {
       />
       {fileName && (
         <div className="csv-meta">
-          <div>文件: {fileName}</div>
-          <div>点数: {pointCount}{ignored > 0 ? ` （忽略 ${ignored} 行）` : ''}</div>
-          {pointCount < 3 && <div style={{ color: '#ef4444' }}>至少需要 3 个点</div>}
+          <div><span className="kv">FILE</span> <span className="v">{fileName}</span></div>
+          <div><span className="kv">PTS</span> <span className="v">{pointCount}</span>
+            {ignored > 0 && <span className="kv"> · 忽略 {ignored} 行</span>}</div>
+          {pointCount < 3 && <div style={{ color: 'var(--danger)' }}>至少需要 3 个点</div>}
         </div>
       )}
     </div>

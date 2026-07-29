@@ -26,15 +26,20 @@ export function Preview2D({ points }: Props) {
   if (!geom) return <div className="preview-empty">导入 CSV 后显示预览</div>;
   const line = geom.map(g => `${g.X},${g.Y}`).join(' ');
   return (
-    <svg width={W} height={H} className="preview2d">
-      <polyline points={line} fill="none" stroke="#3b82f6" strokeWidth={2} />
+    <svg viewBox={`0 0 ${W} ${H}`} className="preview2d">
+      {/* origin crosshair */}
+      <line x1={W / 2} y1={0} x2={W / 2} y2={H} stroke="#1d2128" strokeWidth={1} strokeDasharray="2 4" />
+      <line x1={0} y1={H / 2} x2={W} y2={H / 2} stroke="#1d2128" strokeWidth={1} strokeDasharray="2 4" />
+      {/* path */}
+      <polyline points={line} fill="none" stroke="#22d3ee" strokeWidth={2} opacity={0.9} />
       {geom.map((g, i) => (
         <g key={i}>
-          <circle cx={g.X} cy={g.Y} r={3} fill="#ef4444" />
+          <circle cx={g.X} cy={g.Y} r={3} fill="#ffb627" stroke="#0a0c0f" strokeWidth={1} />
           {(() => {
             const len = Math.hypot(g.dx, g.dy);
             if (len < 1e-3) return null;
-            return <line x1={g.X} y1={g.Y} x2={g.X + g.dx} y2={g.Y + g.dy} stroke="#22c55e" strokeWidth={2} />;
+            return <line x1={g.X} y1={g.Y} x2={g.X + g.dx} y2={g.Y + g.dy}
+              stroke="#ffb627" strokeWidth={2} opacity={0.8} />;
           })()}
         </g>
       ))}

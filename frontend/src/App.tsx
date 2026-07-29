@@ -57,24 +57,73 @@ export default function App() {
 
   return (
     <div className="app">
-      <header><h1>PoseGenerator</h1><BackendStatus /></header>
+      <header>
+        <h1>
+          PoseGenerator
+          <span className="sub">姿态调控台 · ZYX</span>
+        </h1>
+        <BackendStatus />
+      </header>
       <div className="layout">
         <aside className="left">
-          <CsvImport onLoaded={onLoaded} fileName={fileName}
-            pointCount={points.length} ignored={ignored} />
-          <PresetBar current={currentPreset} onApply={applyPreset} />
-          <ParamsPanel params={params} initialPose={initialPose}
-            onParams={setParams} onInitialPose={setInitialPose} />
-          <button onClick={exportToPathview} disabled={!enabled || exporting || posePoints.length === 0}>
-            {exporting ? '导出中…' : '在 pathview 中查看 →'}
-          </button>
-          {exportErr && <div className="err">{exportErr}</div>}
-          {error && <div className="err">生成失败: {error}</div>}
+          <div className="panel">
+            <div className="panel-head">
+              <span className="title">路径输入</span>
+              <span className="badge">CSV · x,y,z</span>
+            </div>
+            <div className="panel-body">
+              <CsvImport onLoaded={onLoaded} fileName={fileName}
+                pointCount={points.length} ignored={ignored} />
+            </div>
+          </div>
+
+          <div className="panel">
+            <div className="panel-head">
+              <span className="title">参数预设</span>
+              <span className="badge">PRESETS</span>
+            </div>
+            <PresetBar current={currentPreset} onApply={applyPreset} />
+          </div>
+
+          <div className="panel">
+            <div className="panel-head">
+              <span className="title">算法参数</span>
+              <span className="badge">PARAMS</span>
+            </div>
+            <div className="panel-body">
+              <ParamsPanel params={params} initialPose={initialPose}
+                onParams={setParams} onInitialPose={setInitialPose} />
+              <button className="export-btn" onClick={exportToPathview}
+                disabled={!enabled || exporting || posePoints.length === 0}>
+                {exporting ? '导出中…' : '在 pathview 中查看  →'}
+              </button>
+              {exportErr && <div className="err">{exportErr}</div>}
+              {error && <div className="err">生成失败: {error}</div>}
+            </div>
+          </div>
         </aside>
+
         <main className="right">
-          <Preview2D points={posePoints} />
-          <PoseTable points={posePoints} />
+          <div className="panel">
+            <div className="panel-head">
+              <span className="title">2D 投影 · XY 俯视</span>
+              <span className="badge">{posePoints.length} PTS</span>
+            </div>
+            <div className="panel-body">
+              <Preview2D points={posePoints} />
+            </div>
+          </div>
         </main>
+
+        <section className="right">
+          <div className="panel">
+            <div className="panel-head">
+              <span className="title">位姿数据流</span>
+              <span className="badge">{posePoints.length} × 6</span>
+            </div>
+            <PoseTable points={posePoints} />
+          </div>
+        </section>
       </div>
     </div>
   );

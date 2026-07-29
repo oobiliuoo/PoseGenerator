@@ -10,7 +10,12 @@ export function BackendStatus() {
     const id = setInterval(tick, 5000);
     return () => { active = false; clearInterval(id); };
   }, []);
-  const color = ok ? '#22c55e' : (ok === false ? '#ef4444' : '#9ca3af');
+  const cls = ok ? 'online' : (ok === false ? 'offline' : 'unknown');
   const label = ok ? '后端在线' : (ok === false ? '后端离线' : '检测中');
-  return <span style={{ color }}>{label}</span>;
+  return (
+    <span className={`backend-status ${cls}`}>
+      <span className="dot" />
+      {label}
+    </span>
+  );
 }
