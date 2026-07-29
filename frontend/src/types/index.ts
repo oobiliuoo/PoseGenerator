@@ -1,5 +1,7 @@
 export interface Point { x: number; y: number; z: number; }
 
+export interface Rotation { rx: number; ry: number; rz: number; }
+
 export interface PosePoint extends Point { rx: number; ry: number; rz: number; }
 
 export type OutputMode = 0 | 1; // 0=FULL, 1=KEYPOINTS

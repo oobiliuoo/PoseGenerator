@@ -37,4 +37,22 @@ r = parseCsvPoints('x,y,z\n1,2,3\nbad,2,3\n4,5,6');
 assert(r.points.length === 2, 'one bad row ignored');
 assert(r.ignored === 1, 'ignored count = 1');
 
+// 8. Rotation columns parsed when present (rx,ry,rz).
+r = parseCsvPoints('x,y,z,rx,ry,rz\n0,0,0,1,2,3\n4,5,6,7,8,9');
+assert(r.rotations !== null && r.rotations.length === 2, 'rotations: 2 rows');
+assert(r.rotations![0].rx === 1 && r.rotations![0].ry === 2 && r.rotations![0].rz === 3, 'rotations: values');
+assert(r.mapping?.rx === 'rx' && r.mapping?.rz === 'rz', 'rotations: mapping recorded');
+
+// 9. Rotation aliases (roll/pitch/yaw) matched, columns reordered.
+r = parseCsvPoints('yaw,roll,pitch,x,y,z\n90,10,20,1,2,3');
+assert(r.rotations !== null, 'rotation aliases matched');
+const rot0 = r.rotations![0];
+assert(rot0.rx === 10, 'roll → rx = 10');
+assert(rot0.ry === 20, 'pitch → ry = 20');
+assert(rot0.rz === 90, 'yaw → rz = 90');
+
+// 10. No rotation columns → rotations is null (not an array of zeros).
+r = parseCsvPoints('x,y,z\n1,2,3');
+assert(r.rotations === null, 'no rotation columns → null');
+
 console.log('csv.test OK');

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import type { GenerateParams, InitialPose, Point, PosePreset } from './types';
+import type { GenerateParams, InitialPose, Point, PosePoint, PosePreset, Rotation } from './types';
 import { DEFAULT_INITIAL_POSE, DEFAULT_PARAMS } from './types';
 import { CsvImport } from './components/CsvImport';
 import { ParamsPanel } from './components/ParamsPanel';
@@ -12,6 +12,7 @@ import { sendToPathview, openPathview } from './api/pathview';
 
 export default function App() {
   const [points, setPoints] = useState<Point[]>([]);
+  const [csvRotations, setCsvRotations] = useState<Rotation[] | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [ignored, setIgnored] = useState(0);
   const [csvErr, setCsvErr] = useState<string | null>(null);
@@ -19,6 +20,8 @@ export default function App() {
   const [initialPose, setInitialPose] = useState<InitialPose>({ ...DEFAULT_INITIAL_POSE });
   const [exporting, setExporting] = useState(false);
   const [exportErr, setExportErr] = useState<string | null>(null);
+  /** which pose stream to view/export: generated (algorithm) vs csv (original) */
+  const [poseSrc, setPoseSrc] = useState<'generated' | 'csv'>('generated');
 
   const req = useMemo(() => ({
     points,
@@ -28,7 +31,14 @@ export default function App() {
 
   const enabled = points.length >= 3;
   const { result, error, loading } = useGenerate(req, enabled);
-  const posePoints = result?.result ?? [];
+  const generatedPoints = result?.result ?? [];
+
+  // The active pose stream selected by the toggle (csv only when present).
+  const hasCsvRot = !!csvRotations && csvRotations.length === points.length;
+  const csvPosePoints: PosePoint[] = useMemo(() => hasCsvRot
+    ? points.map((p, i) => ({ ...p, ...csvRotations![i] }))
+    : [], [points, csvRotations, hasCsvRot]);
+  const posePoints = poseSrc === 'csv' && hasCsvRot ? csvPosePoints : generatedPoints;
 
   const currentPreset: PosePreset = useMemo(() => ({
     name: '_current', initial_pose: initialPose, params,
@@ -39,8 +49,9 @@ export default function App() {
     setInitialPose({ ...p.initial_pose });
   };
 
-  const onLoaded = (pts: Point[], name: string, ignored: number, error?: string) => {
-    setPoints(pts); setFileName(name); setIgnored(ignored); setCsvErr(error ?? null);
+  const onLoaded = (pts: Point[], rots: Rotation[] | null, name: string, ignored: number, error?: string) => {
+    setPoints(pts); setCsvRotations(rots); setFileName(name); setIgnored(ignored); setCsvErr(error ?? null);
+    if (rots) setPoseSrc('csv'); else setPoseSrc('generated');
   };
 
   const exportToPathview = async () => {
@@ -74,7 +85,8 @@ export default function App() {
             </div>
             <div className="panel-body">
               <CsvImport onLoaded={onLoaded} fileName={fileName}
-                pointCount={points.length} ignored={ignored} error={csvErr} />
+                pointCount={points.length} ignored={ignored} error={csvErr}
+                hasRotation={hasCsvRot} />
             </div>
           </div>
 
@@ -122,6 +134,14 @@ export default function App() {
               <span className="title">位姿数据流</span>
               <span className="badge">{posePoints.length} × 6</span>
             </div>
+            <div className="panel-head pose-src-bar" style={{ borderTop: 'none', borderBottom: '1px solid var(--line)' }}>
+              {hasCsvRot ? (
+                <div className="seg">
+                  <button className={poseSrc === 'csv' ? 'seg-on' : ''} onClick={() => setPoseSrc('csv')}>CSV 原始</button>
+                  <button className={poseSrc === 'generated' ? 'seg-on' : ''} onClick={() => setPoseSrc('generated')}>算法生成</button>
+                </div>
+              ) : <span className="kv">算法生成 · ZYX</span>}
+            </div>
             <PoseTable points={posePoints} />
           </div>
         </section>
@@ -129,3 +149,4 @@ export default function App() {
     </div>
   );
 }
+

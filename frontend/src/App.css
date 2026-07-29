@@ -442,6 +442,39 @@ button:hover:not(:disabled) {
   border-radius: 2px;
 }
 
+/* --- pose source segmented control ----------------------------------- */
+.pose-src-bar { justify-content: center; }
+.pose-src-bar .kv {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.seg {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.seg button {
+  padding: 4px 12px;
+  border: none;
+  border-right: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--bg-inset);
+  color: var(--ink-faint);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+.seg button:last-child { border-right: none; }
+.seg button.seg-on {
+  background: var(--arc);
+  color: var(--bg-void);
+  font-weight: 700;
+}
+
 /* --- backend status indicator ----------------------------------------- */
 .backend-status {
   display: inline-flex;
