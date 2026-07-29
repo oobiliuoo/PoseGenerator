@@ -14,6 +14,7 @@ export default function App() {
   const [points, setPoints] = useState<Point[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
   const [ignored, setIgnored] = useState(0);
+  const [csvErr, setCsvErr] = useState<string | null>(null);
   const [params, setParams] = useState<GenerateParams>({ ...DEFAULT_PARAMS });
   const [initialPose, setInitialPose] = useState<InitialPose>({ ...DEFAULT_INITIAL_POSE });
   const [exporting, setExporting] = useState(false);
@@ -38,8 +39,8 @@ export default function App() {
     setInitialPose({ ...p.initial_pose });
   };
 
-  const onLoaded = (pts: Point[], name: string, ignored: number) => {
-    setPoints(pts); setFileName(name); setIgnored(ignored);
+  const onLoaded = (pts: Point[], name: string, ignored: number, error?: string) => {
+    setPoints(pts); setFileName(name); setIgnored(ignored); setCsvErr(error ?? null);
   };
 
   const exportToPathview = async () => {
@@ -73,7 +74,7 @@ export default function App() {
             </div>
             <div className="panel-body">
               <CsvImport onLoaded={onLoaded} fileName={fileName}
-                pointCount={points.length} ignored={ignored} />
+                pointCount={points.length} ignored={ignored} error={csvErr} />
             </div>
           </div>
 
