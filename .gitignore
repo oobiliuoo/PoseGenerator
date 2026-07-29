@@ -21,3 +21,6 @@ Thumbs.db
 config/
 runtime/
 data/
+
+# TypeScript build cache
+*.tsbuildinfo
