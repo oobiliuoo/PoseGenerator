@@ -52,5 +52,37 @@ target_include_directories(pose_backend PRIVATE
 )
 target_link_libraries(pose_backend PRIVATE
     ${NEXUS_ROOT}/x64/Release/MultimodalWeldSystem.lib
+    ${NEXUS_ROOT}/x64/Release/Toolkit.lib
+    ${NEXUS_ROOT}/x64/Release/Nexus.lib
+    ${NEXUS_ROOT}/x64/Release/pos_transform.lib
+    ${NEXUS_ROOT}/x64/Release/RoboLinker.lib
+    ${NEXUS_ENV_ROOT}/opencv-4.10.0/build/x64/vc16/lib/opencv_world4100.lib
+    ${NEXUS_ENV_ROOT}/spdlog/lib/spdlog.lib
 )
 target_compile_definitions(pose_backend PRIVATE NOMINMAX)
+
+add_executable(test_adapter src/tests/test_adapter.cpp src/pose_adapter.cpp)
+target_include_directories(test_adapter PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party
+    ${NEXUS_ROOT}/MultimodalWeldSystem/include
+    ${NEXUS_ROOT}/Toolkit/include
+    ${NEXUS_ROOT}/Nexus/include
+    ${NEXUS_ROOT}/pos_transform/include
+    ${NEXUS_ROOT}/RoboLinker/include
+    ${NEXUS_ENV_ROOT}/Eigen3.4
+    ${NEXUS_ENV_ROOT}/opencv-4.10.0/build/include
+    ${NEXUS_ENV_ROOT}/spdlog/include
+    ${NEXUS_ENV_ROOT}/tj_ipcsys_lib
+    ${NEXUS_ENV_ROOT}/libmodbus/include
+)
+target_link_libraries(test_adapter PRIVATE
+    ${NEXUS_ROOT}/x64/Release/MultimodalWeldSystem.lib
+    ${NEXUS_ROOT}/x64/Release/Toolkit.lib
+    ${NEXUS_ROOT}/x64/Release/Nexus.lib
+    ${NEXUS_ROOT}/x64/Release/pos_transform.lib
+    ${NEXUS_ROOT}/x64/Release/RoboLinker.lib
+    ${NEXUS_ENV_ROOT}/opencv-4.10.0/build/x64/vc16/lib/opencv_world4100.lib
+    ${NEXUS_ENV_ROOT}/spdlog/lib/spdlog.lib
+)
+target_compile_definitions(test_adapter PRIVATE NOMINMAX)
+set_target_properties(test_adapter PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
