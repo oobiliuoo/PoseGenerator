@@ -11,11 +11,16 @@ export interface AddableType {
   category: string;
 }
 
+export interface AddableGroup {
+  group: string;
+  items: AddableType[];
+}
+
 interface Props {
   node: PipelineNode;
   output: NodeOutput | undefined;
   selected: boolean;
-  addableTypes: AddableType[];
+  addableGroups: AddableGroup[];
   onSelect: () => void;
   onParams: (patch: Record<string, number>) => void;
   onRemove: () => void;
@@ -76,7 +81,7 @@ function NumCtrl(p: {
   );
 }
 
-export function NodeCard({ node, output, selected, addableTypes, onSelect, onParams, onRemove, onMove, onAddAfter, onCsvFile, onExport }: Props) {
+export function NodeCard({ node, output, selected, addableGroups, onSelect, onParams, onRemove, onMove, onAddAfter, onCsvFile, onExport }: Props) {
   const [expanded, setExpanded] = useState(true);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
   const addMenuRef = useRef<HTMLDivElement>(null);
@@ -180,20 +185,25 @@ export function NodeCard({ node, output, selected, addableTypes, onSelect, onPar
             }}
             onClick={e => e.stopPropagation()}
           >
-            {addableTypes.length === 0 && (
+            {addableGroups.length === 0 && (
               <div className="nc-add-empty">无可用节点</div>
             )}
-            {addableTypes.map(t => (
-              <button
-                key={t.type}
-                role="menuitem"
-                className="nc-add-item"
-                onClick={() => { onAddAfter(t.type); setAddMenuOpen(false); }}
-              >
-                <span className="nc-add-cat">{t.category}</span>
-                <span className="nc-add-label">{t.label}</span>
-                <span className="nc-add-short">+ {t.short}</span>
-              </button>
+            {addableGroups.map(g => (
+              <span key={g.group} className="add-group">
+                <span className="add-group-label">{g.group}</span>
+                {g.items.map(t => (
+                  <button
+                    key={t.type}
+                    role="menuitem"
+                    className="nc-add-item"
+                    onClick={() => { onAddAfter(t.type); setAddMenuOpen(false); }}
+                  >
+                    <span className="nc-add-cat">{t.category}</span>
+                    <span className="nc-add-label">{t.label}</span>
+                    <span className="nc-add-short">+ {t.short}</span>
+                  </button>
+                ))}
+              </span>
             ))}
           </div>,
           document.body
@@ -211,6 +221,9 @@ export function NodeCard({ node, output, selected, addableTypes, onSelect, onPar
               ? <span className="nc-status nc-err">{err}</span>
               : <span className="nc-status">{outCount} pts</span>}
           </div>
+          {def.type === 'filter_ransac_line' && (
+            <div className="nc-note">⚠ RANSAC 结果有随机性,重算可能变化</div>
+          )}
           {/* 源节点:文件选择 */}
           {def.isSource && (
             <label className="nc-file">

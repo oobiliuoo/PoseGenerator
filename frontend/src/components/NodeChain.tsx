@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import type { PipelineNode } from '../types';
 import type { NodeOutput } from '../lib/pipeline';
 import { NODE_REGISTRY } from '../lib/nodeRegistry';
-import { NodeCard, type AddableType } from './NodeCard';
+import { NodeCard, type AddableType, type AddableGroup } from './NodeCard';
 
 interface Props {
   nodes: PipelineNode[];
@@ -18,21 +18,31 @@ interface Props {
   onExport?: (id: string) => void;
 }
 
-function buildAddableTypes(): AddableType[] {
-  return Object.values(NODE_REGISTRY).map(d => ({
-    type: d.type,
-    label: d.label,
-    short: d.type === 'csv_input' ? 'CSV'
-         : d.type === 'pose_generate' ? '姿态'
-         : d.type === 'pathview_export' ? '导出'
-         : d.label,
-    category: d.category,
-  }));
+function buildAddableGroups(): AddableGroup[] {
+  const groups: AddableGroup[] = [
+    { group: 'I/O', items: [] },
+    { group: '算法', items: [] },
+    { group: '滤波', items: [] },
+  ];
+  for (const d of Object.values(NODE_REGISTRY)) {
+    const idx = d.category === 'io' ? 0 : d.category === 'algorithm' ? 1 : 2;
+    const t: AddableType = {
+      type: d.type,
+      label: d.label,
+      short: d.type === 'csv_input' ? 'CSV'
+           : d.type === 'pose_generate' ? '姿态'
+           : d.type === 'pathview_export' ? '导出'
+           : d.label,
+      category: d.category,
+    };
+    groups[idx].items.push(t);
+  }
+  return groups;
 }
 
 export function NodeChain(props: Props) {
   const { nodes, outputs, selectedNodeId } = props;
-  const addableTypes = useRef(buildAddableTypes()).current;
+  const addableGroups = useRef(buildAddableGroups()).current;
 
   // Tail "+" is the empty-state / append entry. Once any node exists the
   // user can extend the chain from any node's head-bar "↑ ↓ × +" cluster.
@@ -94,7 +104,7 @@ export function NodeChain(props: Props) {
             node={n}
             output={outputs[n.id]}
             selected={selectedNodeId === n.id}
-            addableTypes={addableTypes}
+            addableGroups={addableGroups}
             onSelect={() => props.onSelect(n.id)}
             onParams={patch => props.onParams(n.id, patch)}
             onRemove={() => props.onRemove(n.id)}
@@ -133,17 +143,22 @@ export function NodeChain(props: Props) {
               transform: 'translateY(-100%)',
             }}
           >
-            {addableTypes.map(t => (
-              <button
-                key={t.type}
-                role="menuitem"
-                className="nc-add-item"
-                onClick={() => { props.onAddNode(t.type); setTailOpen(false); }}
-              >
-                <span className="nc-add-cat">{t.category}</span>
-                <span className="nc-add-label">{t.label}</span>
-                <span className="nc-add-short">+ {t.short}</span>
-              </button>
+            {addableGroups.map(g => (
+              <span key={g.group} className="add-group">
+                <span className="add-group-label">{g.group}</span>
+                {g.items.map(t => (
+                  <button
+                    key={t.type}
+                    role="menuitem"
+                    className="nc-add-item"
+                    onClick={() => { props.onAddNode(t.type); setTailOpen(false); }}
+                  >
+                    <span className="nc-add-cat">{t.category}</span>
+                    <span className="nc-add-label">{t.label}</span>
+                    <span className="nc-add-short">+ {t.short}</span>
+                  </button>
+                ))}
+              </span>
             ))}
           </div>,
           document.body

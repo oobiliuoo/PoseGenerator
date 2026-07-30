@@ -1200,3 +1200,8 @@ button:not(.primary-cta):not(.link):hover:not(:disabled) {
 .pb-run { background: var(--arc); border: 1px solid var(--arc); color: var(--bg-void); font-family: var(--display); font-weight: 700; padding: 6px 14px; }
 .pb-run:disabled { background: var(--bg-inset); border-color: var(--line); color: var(--ink-faint); }
 .layout { grid-template-columns: 420px minmax(0, 1fr); }
+
+/* --- 节点添加分组 --- */
+.add-group { display: inline-flex; align-items: center; gap: 4px; margin-right: 10px; }
+.add-group-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); margin-right: 4px; }
+.nc-note { font-family: var(--mono); font-size: 10px; color: var(--arc); padding: 4px 6px; background: rgba(255, 182, 39, 0.08); border-left: 2px solid var(--arc); border-radius: 2px; }
