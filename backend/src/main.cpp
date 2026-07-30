@@ -1,6 +1,7 @@
 #include <httplib.h>
 #include <iostream>
 #include "pose_adapter.h"
+#include "filter_adapter.h"
 
 int main() {
     httplib::Server svr;
@@ -50,6 +51,32 @@ int main() {
             return;
         }
         std::string node_type = body.value("node_type", "");
+        // filter_* node_type -> filter_adapter
+        if (node_type.rfind("filter_", 0) == 0) {
+            FilterRequest fr;
+            if (!parseFilterRequest(body, fr)) {
+                res.status = 400;
+                res.set_content("{\"error\":\"invalid filter request shape\"}", "application/json");
+                return;
+            }
+            try {
+                FilterResponse resp = runFilter(fr);
+                nlohmann::json out;
+                nlohmann::json arr = nlohmann::json::array();
+                for (const auto& pt : resp.result) {
+                    cv::Point3f pos = pt.toPos();
+                    cv::Point3f rot = pt.toRot();
+                    arr.push_back({{"x",pos.x},{"y",pos.y},{"z",pos.z},
+                                   {"rx",rot.x},{"ry",rot.y},{"rz",rot.z}});
+                }
+                out["output"] = {{"points", arr}, {"meta", nlohmann::json::object()}};
+                res.set_content(out.dump(), "application/json");
+            } catch (const std::exception& e) {
+                res.status = 500;
+                res.set_content(std::string("{\"error\":\"") + e.what() + "\"}", "application/json");
+            }
+            return;
+        }
         if (node_type != "pose_generate") {
             res.status = 400;
             res.set_content("{\"error\":\"unknown node_type\"}", "application/json");

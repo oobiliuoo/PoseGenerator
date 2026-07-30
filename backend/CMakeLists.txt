@@ -37,6 +37,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO ${POSE_RUNTIME_DIR})
 add_executable(pose_backend
     src/main.cpp
     src/pose_adapter.cpp
+    src/filter_adapter.cpp
 )
 target_include_directories(pose_backend PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party
