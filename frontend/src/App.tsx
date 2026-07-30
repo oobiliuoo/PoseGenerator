@@ -136,18 +136,6 @@ export default function App() {
         <aside className="left">
           <div className="panel">
             <div className="panel-head">
-              <span className="title">路径输入</span>
-              <span className="badge">CSV · x,y,z</span>
-            </div>
-            <div className="panel-body">
-              <CsvImport onLoaded={onLoaded} fileName={fileName}
-                pointCount={points.length} ignored={ignored} error={csvErr}
-                hasRotation={hasCsvRot} />
-            </div>
-          </div>
-
-          <div className="panel">
-            <div className="panel-head">
               <span className="title">参数预设</span>
               <span className="badge">PRESETS</span>
             </div>
@@ -167,7 +155,7 @@ export default function App() {
         </aside>
 
         <main className="right">
-          <div className="panel">
+          <div className="panel preview-panel">
             <div className="panel-head panel-head-row">
               <span className="title">2D 投影预览</span>
               <span className="badge">
@@ -180,7 +168,7 @@ export default function App() {
             </div>
           </div>
 
-          <div className="panel">
+          <div className="panel table-panel">
             <div className="panel-head">
               <span className="title">位姿数据流</span>
               <span className="badge">{posePoints.length} × 6</span>
@@ -208,9 +196,14 @@ export default function App() {
       </div>
 
       <div className="action-bar" role="region" aria-label="主操作">
+        <div className="ab-file">
+          <CsvImport onLoaded={onLoaded} fileName={fileName}
+            pointCount={points.length} ignored={ignored} error={csvErr}
+            hasRotation={hasCsvRot} />
+        </div>
         <div className="ab-stats">
           {points.length === 0 ? (
-            <span className="ab-empty">尚未导入 CSV</span>
+            <span className="ab-empty">尚未导入</span>
           ) : (
             <>
               <span className="ab-stat"><span className="k">PTS</span><span className="v">{stats.count}</span></span>
@@ -223,7 +216,6 @@ export default function App() {
                   </span>
                 </span>
               )}
-              {fileName && <span className="ab-file" title={fileName}>{fileName}</span>}
             </>
           )}
         </div>

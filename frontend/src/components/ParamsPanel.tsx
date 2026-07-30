@@ -7,23 +7,54 @@ interface Props {
   onInitialPose: (p: InitialPose) => void;
 }
 
-// Shared numeric slider+number control.
+/**
+ * Compact numeric control: label + number readout share one line, slider
+ * gets its own line. Saves ~30% vertical space versus the standard
+ * slider+number-on-second-row layout.
+ */
 function NumControl(props: {
   label: string; value: number; min: number; max: number; step: number;
   onChange: (v: number) => void; disabled?: boolean; hint?: string;
 }) {
   const { label, value, min, max, step, onChange, disabled, hint } = props;
   return (
-    <div className={`ctrl${disabled ? ' is-disabled' : ''}`}>
-      <label>{label}{hint ? <span className="hint"> ({hint})</span> : null}</label>
-      <div className="ctrl-row">
-        <input type="range" min={min} max={max} step={step} value={value}
-          disabled={disabled}
-          onChange={e => onChange(parseFloat(e.target.value))} />
+    <div className={`ctrl compact${disabled ? ' is-disabled' : ''}`}>
+      <label>
+        <span className="ctrl-name">
+          {label}
+          {hint && <span className="hint">{hint}</span>}
+        </span>
         <input type="number" min={min} max={max} step={step} value={value}
           disabled={disabled}
-          onChange={e => onChange(parseFloat(e.target.value))} />
-      </div>
+          onChange={e => {
+            const n = parseFloat(e.target.value);
+            if (!Number.isNaN(n)) onChange(n);
+          }}
+        />
+      </label>
+      <input type="range" min={min} max={max} step={step} value={value}
+        disabled={disabled}
+        onChange={e => onChange(parseFloat(e.target.value))}
+        aria-label={label}
+      />
+    </div>
+  );
+}
+
+/** Compact select (same single-row pattern as NumControl). */
+function SelControl(props: {
+  label: string; value: number; options: { value: number; label: string }[];
+  onChange: (v: number) => void;
+}) {
+  const { label, value, options, onChange } = props;
+  return (
+    <div className="ctrl compact">
+      <label>
+        <span className="ctrl-name">{label}</span>
+        <select value={value} onChange={e => onChange(Number(e.target.value))}>
+          {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </select>
+      </label>
     </div>
   );
 }
@@ -57,14 +88,9 @@ export function ParamsPanel({ params, initialPose, onParams, onInitialPose }: Pr
         min={1} max={51} step={1} onChange={setTsw} hint="强制奇数" />
       <NumControl label="min_corner_region_length" value={params.min_corner_region_length}
         min={1} max={50} step={1} onChange={v => setP({ min_corner_region_length: Math.round(v) })} />
-      <div className="ctrl">
-        <label>output_mode</label>
-        <select value={params.output_mode}
-          onChange={e => setP({ output_mode: Number(e.target.value) as OutputMode })}>
-          <option value={0}>FULL</option>
-          <option value={1}>KEYPOINTS</option>
-        </select>
-      </div>
+      <SelControl label="output_mode" value={params.output_mode}
+        options={[{ value: 0 as OutputMode, label: 'FULL' }, { value: 1 as OutputMode, label: 'KEYPOINTS' }]}
+        onChange={v => setP({ output_mode: v as OutputMode })} />
       <NumControl label="max_pose_change_angle" value={params.max_pose_change_angle}
         min={0} max={180} step={0.5} onChange={v => setP({ max_pose_change_angle: v })} />
       <NumControl label="all_curve_threshold" value={params.all_curve_threshold}
@@ -72,7 +98,7 @@ export function ParamsPanel({ params, initialPose, onParams, onInitialPose }: Pr
       <NumControl label="keypoint_pose_angle_threshold" value={params.keypoint_pose_angle_threshold}
         min={0} max={90} step={0.5} disabled={kpDisabled}
         onChange={v => setP({ keypoint_pose_angle_threshold: v })}
-        hint={kpDisabled ? '仅 KEYPOINTS 模式生效' : undefined} />
+        hint={kpDisabled ? '仅 KEYPOINTS 模式' : undefined} />
     </div>
   );
 }

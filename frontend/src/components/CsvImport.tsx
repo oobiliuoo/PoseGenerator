@@ -13,6 +13,11 @@ interface Props {
   hasRotation: boolean;
 }
 
+/**
+ * Compact file input designed for the bottom action bar.
+ * Single row, drag-and-drop, shows the loaded filename + point count.
+ * When no file is loaded it shows a "选择 CSV / 拖入" prompt.
+ */
 export function CsvImport({ onLoaded, fileName, pointCount, ignored, error, hasRotation }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -37,17 +42,20 @@ export function CsvImport({ onLoaded, fileName, pointCount, ignored, error, hasR
   const onPick = (e: ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (f) ingest(f);
+    // reset so picking the same file again still triggers onChange
+    e.target.value = '';
   };
 
   const tooFew = !error && pointCount > 0 && pointCount < 3;
 
   return (
-    <div className="csv-import">
+    <div className="ab-csv">
       <label
-        className={`dropzone${dragOver ? ' is-drag-over' : ''}${fileName ? ' is-loaded' : ''}`}
+        className={`ab-dropzone${dragOver ? ' is-drag-over' : ''}${fileName ? ' is-loaded' : ''}`}
         onDragOver={e => { e.preventDefault(); setDragOver(true); }}
         onDragLeave={() => setDragOver(false)}
         onDrop={onDrop}
+        title={fileName ?? '选择或拖入 CSV 文件'}
       >
         <input
           ref={inputRef}
@@ -56,28 +64,23 @@ export function CsvImport({ onLoaded, fileName, pointCount, ignored, error, hasR
           onChange={onPick}
           aria-label="选择 CSV 文件"
         />
-        <div className="dz-body">
-          <span className="dz-title">{fileName ? '替换文件' : '拖入 CSV 或点击选择'}</span>
-          <span className="dz-hint">支持 x / y / z 列名（含 pos_x、px 等别名），可选 rx / ry / rz</span>
-        </div>
+        <span className="ab-dz-icon" aria-hidden="true">⤓</span>
+        {fileName ? (
+          <span className="ab-dz-loaded">
+            <span className="ab-dz-name">{fileName}</span>
+            <span className="ab-dz-meta">
+              {pointCount} 点
+              {ignored > 0 && ` · 忽略 ${ignored}`}
+              {hasRotation && ' · 含姿态'}
+            </span>
+          </span>
+        ) : (
+          <span className="ab-dz-prompt">选择 CSV / 拖入</span>
+        )}
       </label>
 
-      {fileName && (
-        <dl className="csv-meta">
-          <div><dt>文件</dt><dd>{fileName}</dd></div>
-          <div>
-            <dt>点数</dt>
-            <dd>
-              {pointCount}
-              {ignored > 0 && <span className="meta-dim"> · 忽略 {ignored} 行</span>}
-              {hasRotation && <span className="meta-dim"> · 含姿态</span>}
-            </dd>
-          </div>
-        </dl>
-      )}
-
-      {error && <div className="err">{error}</div>}
-      {tooFew && <div className="err">至少需要 3 个点</div>}
+      {error && <div className="ab-err" role="alert">导入失败:{error}</div>}
+      {tooFew && <div className="ab-err">至少需要 3 个点</div>}
     </div>
   );
 }

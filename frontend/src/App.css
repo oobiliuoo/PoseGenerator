@@ -64,6 +64,8 @@ html, body, #root {
 
 /* --- atmosphere: blueprint grid + vignette ------------------------------ */
 .app {
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
   padding: 18px 18px 96px;     /* extra bottom padding for sticky action bar */
   background:
@@ -205,18 +207,51 @@ header h1 .sub {
 }
 
 /* =========================================================================
-   LAYOUT — two columns (sidebar + main), preview/table stacked
+   LAYOUT — three-column on wide screens (sidebar | preview | table),
+   with right side-by-side so the preview fills its column and the
+   data table gets its own scroll region (no body scroll needed).
    ========================================================================= */
 .layout {
   position: relative;
   z-index: 2;
+  flex: 1;                      /* fill the remaining vertical space */
+  min-height: 0;                /* allow children to shrink for scrolling */
   display: grid;
   grid-template-columns: 360px minmax(0, 1fr);
   gap: 16px;
-  align-items: start;
 }
-.left, .right { display: flex; flex-direction: column; gap: 16px; }
-.right { min-width: 0; }
+.left {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.right {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 16px;
+  min-height: 0;                /* required so internal scroll works */
+  align-items: start;           /* preview keeps its natural height */
+}
+/* Preview panel: natural height, no stretch */
+.right .preview-panel { align-self: start; }
+/* Table panel: stretch to the row, internal scroll */
+.right .table-panel {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.right .table-panel > .panel-head { flex-shrink: 0; }
+.right .table-panel > .panel-body { flex-shrink: 0; }
+.right .table-panel .pose-table-wrap,
+.right .table-panel .table-empty {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  /* Block scroll chaining: scrolling inside the table must not
+     bubble up and push the body / the whole page. */
+  overscroll-behavior: contain;
+}
 
 /* =========================================================================
    PANEL PRIMITIVE
@@ -328,6 +363,58 @@ select:focus-visible,
 }
 .ctrl-row { display: flex; gap: 10px; align-items: center; }
 
+/* COMPACT PARAM CONTROL — for the dense algorithm-parameters panel.
+   Label + number share one line; slider gets its own line below.
+   Saves ~30% vertical space vs. the standard slider+number-on-second-row. */
+.ctrl.compact {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+  margin: 7px 0;
+}
+.ctrl.compact > label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 11px;
+}
+.ctrl.compact .ctrl-name {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink-dim);
+  font-family: var(--sans);
+  letter-spacing: 0.01em;
+}
+.ctrl.compact .ctrl-name .hint {
+  font-family: var(--mono);
+  color: var(--ink-faint);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.ctrl.compact > input[type='number'],
+.ctrl.compact > label input[type='number'] {
+  width: 76px;
+  padding: 3px 6px;
+  font-size: 11px;
+  text-align: right;
+}
+.ctrl.compact > label select {
+  font-size: 11px;
+  padding: 3px 6px;
+}
+.ctrl.compact > input[type='range'] {
+  width: 100%;
+  margin: 0;
+}
+
 input[type='range'] {
   -webkit-appearance: none;
   appearance: none;
@@ -392,91 +479,12 @@ select:focus { border-color: var(--arc); }
 
 /* =========================================================================
    CSV IMPORT — drop zone
+   (The old sidebar dropzone was replaced by the action-bar .ab-dropzone
+   in the layout refactor; the legacy rules below are kept as harmless
+   fallbacks in case any other component reuses the names.)
    ========================================================================= */
 .csv-import { display: flex; flex-direction: column; gap: 12px; }
-
-.dropzone {
-  display: block;
-  position: relative;
-  padding: 18px;
-  border: 1.5px dashed var(--line);
-  border-radius: var(--radius);
-  background: var(--bg-inset);
-  cursor: pointer;
-  transition: border-color 0.15s, background 0.15s, transform 0.15s;
-  text-align: center;
-}
-.dropzone:hover {
-  border-color: var(--line-bright);
-  background: rgba(34, 211, 238, 0.025);
-}
-.dropzone.is-drag-over {
-  border-color: var(--arc);
-  border-style: solid;
-  background: rgba(255, 182, 39, 0.05);
-  transform: scale(1.005);
-}
-.dropzone.is-loaded {
-  border-style: solid;
-  border-color: var(--line);
-  text-align: left;
-}
-.dropzone input[type='file'] {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  cursor: pointer;
-}
-.dz-body {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  pointer-events: none;
-}
-.dz-title {
-  font-family: var(--sans);
-  font-weight: 500;
-  font-size: 13px;
-  color: var(--ink);
-}
-.dz-hint {
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--ink-faint);
-  letter-spacing: 0.02em;
-}
-
-.csv-meta {
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-family: var(--mono);
-  font-size: 11px;
-}
-.csv-meta > div { display: flex; gap: 12px; align-items: baseline; min-width: 0; }
-.csv-meta dt {
-  width: 36px;
-  flex-shrink: 0;
-  color: var(--ink-faint);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-size: 10px;
-}
-.csv-meta dd {
-  margin: 0;
-  color: var(--ink);
-  font-family: var(--mono);
-  font-size: 12px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  min-width: 0;
-  flex: 1;
-}
-.csv-meta .meta-dim { color: var(--ink-faint); }
+.csv-import .err { margin: 0; }
 
 /* =========================================================================
    PRESET BAR
@@ -557,13 +565,25 @@ select:focus { border-color: var(--arc); }
 }
 .preview2d {
   display: block;
-  width: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
   height: auto;
+}
+/* Frame: fill the preview column width, keep 4:3 ratio, cap height. */
+.preview-frame {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  max-height: min(60vh, 540px);
+  margin: 0 auto;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
   background:
     radial-gradient(ellipse 60% 50% at 50% 50%, rgba(34, 211, 238, 0.04), transparent 70%),
     var(--bg-inset);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
+  overflow: hidden;
 }
 .preview-empty {
   color: var(--ink-faint);
@@ -627,6 +647,9 @@ select:focus { border-color: var(--arc); }
   overflow: auto;
   border-top: 1px solid var(--line);
 }
+/* In the side-by-side layout the table panel is a flex column; the wrap
+   becomes a flex item with flex:1. Drop the 520px cap so flex can drive. */
+.right .table-panel .pose-table-wrap { max-height: none; }
 .pose-table {
   width: 100%;
   border-collapse: collapse;
@@ -710,7 +733,7 @@ select:focus { border-color: var(--arc); }
 .csv-import .err { margin: 0; }
 
 /* =========================================================================
-   ACTION BAR — sticky bottom primary CTA + stats
+   ACTION BAR — sticky bottom: file input + stats + primary CTA
    ========================================================================= */
 .action-bar {
   position: fixed;
@@ -719,10 +742,9 @@ select:focus { border-color: var(--arc); }
   bottom: 18px;
   z-index: 5;
   display: flex;
-  justify-content: space-between;
   align-items: center;
   gap: 16px;
-  padding: 12px 16px 12px 20px;
+  padding: 10px 14px 10px 16px;
   background: rgba(13, 15, 19, 0.78);
   backdrop-filter: saturate(160%) blur(12px);
   -webkit-backdrop-filter: saturate(160%) blur(12px);
@@ -731,13 +753,101 @@ select:focus { border-color: var(--arc); }
   box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.4);
   min-height: 60px;
 }
+
+/* ----- file input section (left) ----- */
+.ab-file {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ab-csv { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ab-dropzone {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 7px 12px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--bg-inset);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  min-height: 36px;
+  user-select: none;
+}
+.ab-dropzone:hover { border-color: var(--line-bright); }
+.ab-dropzone.is-drag-over {
+  border-color: var(--arc);
+  border-style: solid;
+  background: rgba(255, 182, 39, 0.06);
+}
+.ab-dropzone.is-loaded {
+  border-style: solid;
+  border-color: var(--line);
+}
+.ab-dropzone input[type='file'] {
+  position: absolute;
+  width: 1px; height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.ab-dz-icon {
+  font-family: var(--mono);
+  color: var(--ink-faint);
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.ab-dropzone:hover .ab-dz-icon { color: var(--arc); }
+.ab-dz-prompt {
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--ink-dim);
+  font-weight: 500;
+}
+.ab-dz-loaded {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+.ab-dz-name {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex: 0 1 auto;
+}
+.ab-dz-meta {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.ab-err {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--danger);
+  padding: 0 2px;
+}
+
+/* ----- stats section (middle) ----- */
 .ab-stats {
   display: flex;
   align-items: center;
   gap: 18px;
   flex-wrap: wrap;
   min-width: 0;
-  flex: 1;
+  flex: 1 1 auto;
+  justify-content: center;
 }
 .ab-empty {
   font-family: var(--mono);
@@ -763,25 +873,16 @@ select:focus { border-color: var(--arc); }
   font-variant-numeric: tabular-nums;
   font-weight: 500;
 }
-.ab-file {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--ink-dim);
-  max-width: 220px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+
+/* ----- actions section (right) ----- */
 .ab-actions {
   display: inline-flex;
   align-items: center;
   gap: 12px;
   flex-shrink: 0;
+  margin-left: auto;
 }
-.ab-err {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--danger);
+.ab-actions .ab-err {
   max-width: 280px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -862,18 +963,22 @@ button:not(.primary-cta):not(.link):hover:not(:disabled) {
    ========================================================================= */
 @media (max-width: 1180px) {
   .layout { grid-template-columns: 320px minmax(0, 1fr); }
+  .right { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 }
 @media (max-width: 960px) {
   .layout { grid-template-columns: 1fr; }
+  .right { grid-template-columns: 1fr; }
+  .right .table-panel { max-height: 360px; }
   .pose-table-wrap { max-height: 360px; }
 }
 @media (max-width: 640px) {
   .app { padding: 12px 12px 88px; }
   header { padding: 12px 14px; }
   header h1 { font-size: 15px; }
-  .action-bar { left: 12px; right: 12px; bottom: 12px; padding: 10px 12px; flex-wrap: wrap; }
-  .ab-stats { gap: 10px; }
-  .ab-file { display: none; }
+  .action-bar { left: 12px; right: 12px; bottom: 12px; padding: 10px 12px; flex-wrap: wrap; gap: 10px; }
+  .ab-file { max-width: none; flex: 1 1 100%; }
+  .ab-dropzone { min-height: 32px; }
+  .ab-stats { gap: 10px; justify-content: flex-start; }
   .ab-hint { display: none; }
   .primary-cta { padding: 10px 16px; font-size: 12px; }
 }

@@ -72,7 +72,8 @@ export function Preview2D({ points }: Props) {
       {!geom ? (
         <div className="preview-empty">导入 CSV 后显示预览</div>
       ) : (
-        <svg viewBox={`0 0 ${W} ${H}`} className="preview2d" role="img" aria-label={`${PLANE_LABELS[plane]} 投影`}>
+        <div className="preview-frame">
+          <svg viewBox={`0 0 ${W} ${H}`} className="preview2d" role="img" aria-label={`${PLANE_LABELS[plane]} 投影`}>
           {/* origin crosshair */}
           <line x1={W / 2} y1={0} x2={W / 2} y2={H} stroke="#1d2128" strokeWidth={1} strokeDasharray="2 4" />
           <line x1={0} y1={H / 2} x2={W} y2={H / 2} stroke="#1d2128" strokeWidth={1} strokeDasharray="2 4" />
@@ -96,7 +97,8 @@ export function Preview2D({ points }: Props) {
               </g>
             );
           })}
-        </svg>
+          </svg>
+        </div>
       )}
     </div>
   );
