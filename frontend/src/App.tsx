@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { GenerateParams, InitialPose, Point, PosePoint, PosePreset, Rotation } from './types';
 import { DEFAULT_INITIAL_POSE, DEFAULT_PARAMS } from './types';
 import { CsvImport } from './components/CsvImport';
@@ -9,6 +9,7 @@ import { PoseTable } from './components/PoseTable';
 import { BackendStatus } from './components/BackendStatus';
 import { useGenerate } from './hooks/useGenerate';
 import { sendToPathview, openPathview } from './api/pathview';
+import { parseCsvPoints } from './lib/csv';
 
 /** Compute lightweight path statistics from a list of 3D points. */
 function computeStats(pts: Point[]) {
@@ -89,6 +90,40 @@ export default function App() {
     } else {
       setPoseSrc('generated');
     }
+  };
+
+  /** Parse a File object and feed the data into the app state.
+   *  Used by both the file-picker (click) and the drop zone (drag & drop). */
+  const ingestFile = useCallback((file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = String(reader.result ?? '');
+      const res = parseCsvPoints(text);
+      onLoaded(res.points, res.rotations, file.name, res.ignored, res.error);
+    };
+    reader.readAsText(file);
+  }, []);
+
+  /** The whole ActionBar is a drop target — track whether a file is
+   *  currently being dragged over it so we can render a highlight ring. */
+  const [barDragOver, setBarDragOver] = useState(false);
+  const onBarDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    if (!e.dataTransfer.types.includes('Files')) return;
+    e.preventDefault();
+    if (!barDragOver) setBarDragOver(true);
+  };
+  const onBarDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    // dragLeave also fires when the cursor moves between children inside
+    // the bar; only clear the highlight when we actually leave the bar.
+    if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
+    setBarDragOver(false);
+  };
+  const onBarDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    if (!e.dataTransfer.types.includes('Files')) return;
+    e.preventDefault();
+    setBarDragOver(false);
+    const f = e.dataTransfer.files?.[0];
+    if (f) ingestFile(f);
   };
 
   const exportToPathview = async () => {
@@ -195,9 +230,16 @@ export default function App() {
         </main>
       </div>
 
-      <div className="action-bar" role="region" aria-label="主操作">
+      <div
+        className={`action-bar${barDragOver ? ' is-drag-over' : ''}`}
+        role="region"
+        aria-label="主操作"
+        onDragOver={onBarDragOver}
+        onDragLeave={onBarDragLeave}
+        onDrop={onBarDrop}
+      >
         <div className="ab-file">
-          <CsvImport onLoaded={onLoaded} fileName={fileName}
+          <CsvImport onFile={ingestFile} fileName={fileName}
             pointCount={points.length} ignored={ignored} error={csvErr}
             hasRotation={hasCsvRot} />
         </div>

@@ -1,9 +1,10 @@
-import { useRef, useState, type DragEvent, type ChangeEvent } from 'react';
-import { parseCsvPoints } from '../lib/csv';
+import { useRef, type ChangeEvent } from 'react';
 import type { Point, Rotation } from '../types';
 
 interface Props {
-  onLoaded: (points: Point[], rotations: Rotation[] | null, fileName: string, ignored: number, error?: string) => void;
+  /** Called with the picked/dropped File. The parent is responsible for
+   *  parsing and updating app state. */
+  onFile: (file: File) => void;
   fileName: string | null;
   pointCount: number;
   ignored: number;
@@ -15,33 +16,17 @@ interface Props {
 
 /**
  * Compact file input designed for the bottom action bar.
- * Single row, drag-and-drop, shows the loaded filename + point count.
- * When no file is loaded it shows a "选择 CSV / 拖入" prompt.
+ *
+ * Single row, click-to-pick. Drag-and-drop is handled by the parent
+ * (the whole ActionBar is the drop target) so the user can drop a
+ * file anywhere on the bar — not just on this small zone.
  */
-export function CsvImport({ onLoaded, fileName, pointCount, ignored, error, hasRotation }: Props) {
+export function CsvImport({ onFile, fileName, pointCount, ignored, error, hasRotation }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [dragOver, setDragOver] = useState(false);
-
-  const ingest = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const text = String(reader.result ?? '');
-      const res = parseCsvPoints(text);
-      onLoaded(res.points, res.rotations, file.name, res.ignored, res.error);
-    };
-    reader.readAsText(file);
-  };
-
-  const onDrop = (e: DragEvent<HTMLLabelElement>) => {
-    e.preventDefault();
-    setDragOver(false);
-    const f = e.dataTransfer.files?.[0];
-    if (f) ingest(f);
-  };
 
   const onPick = (e: ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
-    if (f) ingest(f);
+    if (f) onFile(f);
     // reset so picking the same file again still triggers onChange
     e.target.value = '';
   };
@@ -51,10 +36,7 @@ export function CsvImport({ onLoaded, fileName, pointCount, ignored, error, hasR
   return (
     <div className="ab-csv">
       <label
-        className={`ab-dropzone${dragOver ? ' is-drag-over' : ''}${fileName ? ' is-loaded' : ''}`}
-        onDragOver={e => { e.preventDefault(); setDragOver(true); }}
-        onDragLeave={() => setDragOver(false)}
-        onDrop={onDrop}
+        className={`ab-dropzone${fileName ? ' is-loaded' : ''}`}
         title={fileName ?? '选择或拖入 CSV 文件'}
       >
         <input

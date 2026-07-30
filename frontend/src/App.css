@@ -779,15 +779,27 @@ select:focus { border-color: var(--arc); }
   user-select: none;
 }
 .ab-dropzone:hover { border-color: var(--line-bright); }
-.ab-dropzone.is-drag-over {
-  border-color: var(--arc);
-  border-style: solid;
-  background: rgba(255, 182, 39, 0.06);
-}
 .ab-dropzone.is-loaded {
   border-style: solid;
   border-color: var(--line);
 }
+/* When the user drags a file over the ActionBar, the WHOLE bar lights up
+   (border + faint amber wash) so the drop target is unmistakable.
+   The dropzone inside keeps its loaded/empty styling. */
+.action-bar.is-drag-over {
+  border-color: var(--arc);
+  background: rgba(255, 182, 39, 0.07);
+  box-shadow:
+    0 0 0 1px var(--arc) inset,
+    0 -8px 28px rgba(255, 182, 39, 0.18),
+    0 -8px 24px rgba(0, 0, 0, 0.4);
+}
+.action-bar.is-drag-over .ab-dropzone {
+  border-color: var(--arc);
+  border-style: solid;
+  background: rgba(255, 182, 39, 0.08);
+}
+.action-bar.is-drag-over .ab-dz-icon { color: var(--arc); }
 .ab-dropzone input[type='file'] {
   position: absolute;
   width: 1px; height: 1px;
