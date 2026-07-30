@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Pipeline, PoseFrame, ExecCtx } from '../types';
-import { EMPTY_FRAME } from '../types';
 import { runPipeline, getOutput, type NodeOutput } from '../lib/pipeline';
 import { NODE_REGISTRY, makeNode, setCsvFile } from '../lib/nodeRegistry';
 import { BUILTIN_PIPELINES, loadPipelines, savePipeline, deletePipeline } from '../lib/pipelinesStore';
@@ -93,7 +92,13 @@ export function usePipeline() {
       run(nodes, fromIdx);
       return { ...prev, nodes };
     });
-  }, [run]);
+    // 若删的是当前选中节点,指向新的末节点(或空)
+    setSelectedNodeId(prevId => {
+      if (prevId !== nodeId) return prevId;
+      const nodes = pipeline.nodes.filter(n => n.id !== nodeId);
+      return nodes.length > 0 ? nodes[nodes.length - 1].id : null;
+    });
+  }, [run, pipeline.nodes]);
 
   const moveNode = useCallback((nodeId: string, dir: -1 | 1) => {
     setPipeline(prev => {
