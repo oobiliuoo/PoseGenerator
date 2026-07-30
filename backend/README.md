@@ -45,6 +45,8 @@ cd backend/runtime
 
 运行时依赖 nexus `x64/Release/` 下的整套 DLL（Qt5/OpenCV/Nexus 各 DLL 等），用 `scripts/copy-runtime.ps1` 拷到 `backend/runtime/`，exe 在该目录内直接运行。
 
+filter 节点（filter_distance/angle/mean/gaussian/savgol/stat_outlier/ransac_line）复用同一套 `MultimodalWeldSystem.lib`，无新增链接库。`POST /node/execute` 按 `node_type` 分发到 `filter_adapter`。
+
 ## 节点执行接口
 `POST /node/execute`：统一节点执行接口，body `{node_type, input, params}` → `{output}`。第一阶段支持 `node_type=pose_generate`。`POST /generate` 为迁移期兼容保留。
 
