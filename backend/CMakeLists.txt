@@ -28,10 +28,11 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "" FORCE)
 endif()
 
-# --- Backend exe outputs into nexus runtime dir to reuse DLL chain ---------
-set(NEXUS_RUNTIME_DIR "${NEXUS_ROOT}/x64/Release")
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${NEXUS_RUNTIME_DIR})
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO ${NEXUS_RUNTIME_DIR})
+# --- Backend exe outputs into an isolated runtime dir under backend/ ---------
+# Run scripts/copy-runtime.ps1 to populate this dir with the nexus DLL chain.
+set(POSE_RUNTIME_DIR "${CMAKE_SOURCE_DIR}/runtime")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${POSE_RUNTIME_DIR})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO ${POSE_RUNTIME_DIR})
 
 add_executable(pose_backend
     src/main.cpp
@@ -85,4 +86,5 @@ target_link_libraries(test_adapter PRIVATE
     ${NEXUS_ENV_ROOT}/spdlog/lib/spdlog.lib
 )
 target_compile_definitions(test_adapter PRIVATE NOMINMAX)
-set_target_properties(test_adapter PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+# test_adapter inherits the global RUNTIME_OUTPUT_DIRECTORY (backend/runtime),
+# so it shares the same DLL chain as pose_backend after copy-runtime.ps1.
