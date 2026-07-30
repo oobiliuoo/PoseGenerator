@@ -33,6 +33,20 @@ int main() {
     assert(parsed.points.size() == 20);
     assert(parsed.params.at("min_th") == 5.0);
 
+    // 各 filter 烟雾测试:不崩 + 返回点数 >= 1
+    auto runSmoke = [&](const std::string& node_type, std::map<std::string, double> params) {
+        FilterRequest r; r.node_type = node_type; r.points = pts; r.params = params;
+        auto out = runFilter(r);
+        assert(out.result.size() >= 1);
+        std::cout << node_type << ": " << out.result.size() << " pts (in 20)\n";
+    };
+    runSmoke("filter_angle", {{"angleThreshold", 30.0}, {"directionWindowSize", 5}});
+    runSmoke("filter_mean", {{"radius", 5.0}});
+    runSmoke("filter_gaussian", {{"sigma", 1.0}, {"kernelSize", 9}});
+    runSmoke("filter_savgol", {{"halfWindow", 5}, {"degree", 3}});
+    runSmoke("filter_stat_outlier", {{"threshold", 0.5}, {"k", 5}});
+    runSmoke("filter_ransac_line", {{"inlierThreshold", 1.0}, {"maxIterations", 100}, {"minInlierRatio", 0.7}, {"enableProjection", 0}});
+
     std::cout << "test_filter_adapter OK\n";
     return 0;
 }
