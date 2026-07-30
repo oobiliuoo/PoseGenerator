@@ -217,7 +217,7 @@ header h1 .sub {
   flex: 1;                      /* fill the remaining vertical space */
   min-height: 0;                /* allow children to shrink for scrolling */
   display: grid;
-  grid-template-columns: 360px minmax(0, 1fr);
+  grid-template-columns: 400px minmax(0, 1fr);
   gap: 16px;
 }
 .left {
@@ -289,7 +289,9 @@ header h1 .sub {
   align-items: center;
   gap: 8px;
 }
-.panel-body { padding: 16px; }
+.panel-body { padding: 12px; }
+/* 节点链 panel:再收紧一点内边距,让节点卡有更多呼吸空间 */
+.panel:has(.node-chain) > .panel-body { padding: 10px; }
 
 button.link {
   background: transparent;
@@ -974,7 +976,7 @@ button:not(.primary-cta):not(.link):hover:not(:disabled) {
    RESPONSIVE
    ========================================================================= */
 @media (max-width: 1180px) {
-  .layout { grid-template-columns: 320px minmax(0, 1fr); }
+  .layout { grid-template-columns: 360px minmax(0, 1fr); }
   .right { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 }
 @media (max-width: 960px) {
@@ -996,34 +998,200 @@ button:not(.primary-cta):not(.link):hover:not(:disabled) {
 }
 
 /* --- 节点链 ----------------------------------------------------------- */
-.node-chain { display: flex; flex-direction: column; gap: 0; }
+.node-chain { display: flex; flex-direction: column; gap: 8px; }
 .node-slot { display: flex; flex-direction: column; }
 .node-card {
   background: linear-gradient(180deg, var(--bg-panel-2), var(--bg-panel));
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  overflow: hidden;
+  /* No overflow:hidden — popovers inside need to escape this clip.
+     Corners are owned by nc-head (top) and nc-body bottom (last child). */
   cursor: pointer;
   transition: border-color 0.15s;
 }
 .node-card.is-selected { border-color: var(--arc); box-shadow: 0 0 0 1px var(--arc) inset; }
-.nc-head { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--bg-inset); border-bottom: 1px solid var(--line); }
-.nc-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--data); }
-.nc-label { font-family: var(--display); font-weight: 700; font-size: 13px; }
-.nc-cat { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); padding: 1px 5px; border: 1px solid var(--line); border-radius: 2px; }
-.nc-status { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--ink-dim); }
+.nc-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 11px;
+  background: var(--bg-inset);
+  border-bottom: 1px solid var(--line);
+  border-radius: var(--radius) var(--radius) 0 0;  /* own the top corners */
+  min-height: 32px;
+  position: relative;
+}
+.nc-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--data); flex-shrink: 0; }
+.nc-label { font-family: var(--display); font-weight: 700; font-size: 12px; }
+.nc-status { font-family: var(--mono); font-size: 11px; color: var(--ink-dim); }
 .nc-status.nc-err { color: var(--danger); }
-.nc-toggle { padding: 2px 6px; background: transparent; border: none; color: var(--ink-dim); cursor: pointer; }
-.nc-body { padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+.nc-toggle { padding: 0 4px; background: transparent; border: none; color: var(--ink-dim); cursor: pointer; font-size: 11px; line-height: 1; }
+.nc-toggle:hover { color: var(--ink); }
+/* In-head action cluster: ↑ ↓ × +  (kept visually quiet — primary
+   surface is the node body, these are housekeeping) */
+.nc-actions { display: inline-flex; gap: 1px; margin-left: auto; }
+.nc-actions button {
+  padding: 0 5px;
+  height: 20px;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--ink-faint);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: var(--mono);
+}
+.nc-actions button:hover { color: var(--arc); border-color: var(--line); background: var(--bg-inset); }
+.nc-actions button:focus-visible { outline: 2px solid var(--arc); outline-offset: 1px; }
+.nc-actions button.nc-danger:hover { color: var(--danger); border-color: var(--danger); background: rgba(255, 80, 80, 0.06); }
+.nc-body {
+  padding: 10px 11px 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-radius: 0 0 var(--radius) var(--radius);  /* own the bottom corners */
+  overflow: hidden;                                /* clip child backgrounds to corners */
+}
+/* Meta row at the top of body: category pill (left) + output status (right).
+   Lives in the body so the head can stay focused on identity + actions. */
+.nc-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: -2px 0 2px;
+  padding-bottom: 7px;
+  border-bottom: 1px dashed var(--line-soft);
+}
+.nc-meta .nc-cat {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  padding: 2px 6px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: rgba(34, 211, 238, 0.04);
+}
+.nc-meta.is-err { border-bottom-color: var(--danger); }
+.nc-meta.is-err .nc-cat { color: var(--danger); border-color: var(--danger); background: rgba(255, 80, 80, 0.05); }
 .nc-file { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-family: var(--mono); font-size: 11px; color: var(--ink-dim); }
 .nc-file input[type='file'] { position: absolute; width: 1px; height: 1px; opacity: 0; }
-.nc-export { width: 100%; padding: 8px; background: var(--arc); border: 1px solid var(--arc); border-radius: 2px; color: var(--bg-void); font-family: var(--display); font-weight: 700; cursor: pointer; }
+.nc-export { width: 100%; padding: 7px; background: var(--arc); border: 1px solid var(--arc); border-radius: 2px; color: var(--bg-void); font-family: var(--display); font-weight: 700; font-size: 12px; cursor: pointer; }
 .nc-export:disabled { background: var(--bg-inset); border-color: var(--line); color: var(--ink-faint); cursor: not-allowed; }
-.nc-actions { display: flex; gap: 4px; padding: 4px 10px 8px; }
-.nc-actions button { padding: 2px 8px; font-size: 11px; }
-.node-add { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 0; }
-.node-add button { padding: 3px 8px; font-size: 10px; }
-.node-add-tail { padding-top: 10px; border-top: 1px dashed var(--line); margin-top: 8px; }
+
+/* --- "插入节点"头按钮 + 下拉菜单 (replaces the old .node-add ghost row) - */
+.nc-add-toggle {
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1;
+  width: 20px;
+  color: var(--ink-faint);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  cursor: pointer;
+  padding: 0;
+  /* override .nc-actions button defaults */
+  height: 20px;
+}
+.nc-add-toggle:hover { color: var(--arc); border-color: var(--line); background: var(--bg-inset); }
+.nc-add-toggle.is-open { color: var(--bg-void); background: var(--arc); border-color: var(--arc); }
+.nc-add-toggle:focus-visible { outline: 2px solid var(--arc); outline-offset: 1px; }
+
+.nc-add-menu {
+  position: absolute;          /* overridden to `fixed` inline when portal-rendered */
+  top: calc(100% + 4px);
+  right: 0;                    /* default; portal mode sets left/width via inline style */
+  z-index: 1000;               /* above all in-app clipping containers */
+  min-width: 200px;
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(34, 211, 238, 0.06);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  /* Ensure the menu isn't a click target for the "close on outside click" listener */
+  animation: nc-add-menu-in 80ms ease-out;
+}
+@keyframes nc-add-menu-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nc-add-menu { animation: none; }
+}
+.nc-add-item {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 9px;
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  cursor: pointer;
+  text-align: left;
+  min-height: 0;
+}
+.nc-add-item:hover {
+  background: var(--bg-inset);
+  border-color: var(--line);
+}
+.nc-add-item:focus-visible { outline: 2px solid var(--arc); outline-offset: -1px; }
+.nc-add-cat {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  padding: 1px 4px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  text-align: center;
+  background: rgba(34, 211, 238, 0.04);
+}
+.nc-add-label { font-weight: 500; }
+.nc-add-short {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ink-faint);
+  letter-spacing: 0.04em;
+}
+.nc-add-empty {
+  padding: 10px;
+  color: var(--ink-faint);
+  font-family: var(--mono);
+  font-size: 11px;
+  text-align: center;
+}
+
+/* --- 链尾"追加"入口 --------------------------------------------------- */
+.node-tail { position: relative; margin-top: 2px; }
+.node-tail-btn {
+  width: 100%;
+  padding: 7px 10px;
+  font-family: var(--sans);
+  font-size: 11px;
+  color: var(--ink-dim);
+  background: var(--bg-inset);
+  border: 1px dashed var(--line);
+  border-radius: 3px;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+}
+.node-tail-btn:hover { color: var(--arc); border-color: var(--arc); border-style: solid; background: rgba(255, 182, 39, 0.04); }
+.node-tail-btn.is-open { color: var(--bg-void); background: var(--arc); border-color: var(--arc); border-style: solid; }
+.node-tail-menu { right: 0; left: 0; min-width: 0; }
 .node-empty { padding: 24px; color: var(--ink-faint); font-family: var(--mono); font-size: 11px; text-align: center; }
 
 /* --- 流水线底栏 ------------------------------------------------------- */
