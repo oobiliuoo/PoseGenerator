@@ -17,10 +17,11 @@ interface Props {
 function NumCtrl(p: {
   spec: NodeParamSpec;
   value: number;
+  allParams: Record<string, number>;
   onChange: (v: number) => void;
 }) {
-  const { spec, value, onChange } = p;
-  const disabled = spec.disabledWhen ? spec.disabledWhen({ [spec.key]: value }) : false;
+  const { spec, value, allParams, onChange } = p;
+  const disabled = spec.disabledWhen ? spec.disabledWhen(allParams) : false;
   const set = (v: number) => {
     if (spec.forcedOdd) {
       const i = Math.max(1, Math.round(v));
@@ -31,9 +32,12 @@ function NumCtrl(p: {
   };
   if (spec.type === 'select') {
     return (
-      <div className="ctrl compact">
+      <div className={`ctrl compact${disabled ? ' is-disabled' : ''}`}>
         <label>
-          <span className="ctrl-name">{spec.label}</span>
+          <span className="ctrl-name">
+            {spec.label}
+            {disabled && spec.disabledHint && <span className="hint">{spec.disabledHint}</span>}
+          </span>
           <select value={value} disabled={disabled}
             onChange={e => onChange(Number(e.target.value))}>
             {spec.options!.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -103,6 +107,7 @@ export function NodeCard({ node, output, selected, onSelect, onParams, onRemove,
           {/* 算法/工具节点:参数 */}
           {def.params.map(spec => (
             <NumCtrl key={spec.key} spec={spec} value={node.params[spec.key] ?? spec.default}
+              allParams={node.params}
               onChange={v => onParams({ [spec.key]: v })} />
           ))}
           {/* 终点节点:导出按钮 */}
