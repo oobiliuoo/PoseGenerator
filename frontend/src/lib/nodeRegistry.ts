@@ -80,6 +80,113 @@ export const NODE_REGISTRY: Record<string, NodeDef> = {
       return input;
     },
   },
+
+  filter_distance: {
+    type: 'filter_distance',
+    label: '距离滤波',
+    category: 'tool',
+    isSource: false, isSink: false,
+    params: [
+      { key: 'min_th', label: 'min_th', type: 'number', min: 0, max: 50, step: 0.1, default: 1.0 },
+      { key: 'max_th', label: 'max_th', type: 'number', min: 0, max: 500, step: 1, default: 30.0 },
+    ],
+    async execute(input, params, ctx) {
+      if (!input) return EMPTY_FRAME;
+      return ctx.executeNode('filter_distance', input, params);
+    },
+    visualizableMeta: [],
+  },
+  filter_angle: {
+    type: 'filter_angle',
+    label: '角度滤波',
+    category: 'tool',
+    isSource: false, isSink: false,
+    params: [
+      { key: 'angleThreshold', label: 'angleThreshold', type: 'number', min: 0, max: 90, step: 1, default: 30.0 },
+      { key: 'directionWindowSize', label: 'directionWindowSize', type: 'number', min: 2, max: 50, step: 1, default: 5 },
+    ],
+    async execute(input, params, ctx) {
+      if (!input) return EMPTY_FRAME;
+      return ctx.executeNode('filter_angle', input, params);
+    },
+    visualizableMeta: [],
+  },
+  filter_mean: {
+    type: 'filter_mean',
+    label: '均值平滑',
+    category: 'tool',
+    isSource: false, isSink: false,
+    params: [
+      { key: 'radius', label: 'radius', type: 'number', min: 0.1, max: 100, step: 0.1, default: 5.0 },
+    ],
+    async execute(input, params, ctx) {
+      if (!input) return EMPTY_FRAME;
+      return ctx.executeNode('filter_mean', input, params);
+    },
+    visualizableMeta: [],
+  },
+  filter_gaussian: {
+    type: 'filter_gaussian',
+    label: '高斯平滑',
+    category: 'tool',
+    isSource: false, isSink: false,
+    params: [
+      { key: 'sigma', label: 'sigma', type: 'number', min: 0.1, max: 10, step: 0.1, default: 1.0 },
+      { key: 'kernelSize', label: 'kernelSize', type: 'number', min: 1, max: 51, step: 2, default: 9, forcedOdd: true },
+    ],
+    async execute(input, params, ctx) {
+      if (!input) return EMPTY_FRAME;
+      return ctx.executeNode('filter_gaussian', input, params);
+    },
+    visualizableMeta: [],
+  },
+  filter_savgol: {
+    type: 'filter_savgol',
+    label: 'Savitzky-Golay 平滑',
+    category: 'tool',
+    isSource: false, isSink: false,
+    params: [
+      { key: 'halfWindow', label: 'halfWindow', type: 'number', min: 1, max: 50, step: 1, default: 5 },
+      { key: 'degree', label: 'degree', type: 'number', min: 1, max: 10, step: 1, default: 3 },
+    ],
+    async execute(input, params, ctx) {
+      if (!input) return EMPTY_FRAME;
+      return ctx.executeNode('filter_savgol', input, params);
+    },
+    visualizableMeta: [],
+  },
+  filter_stat_outlier: {
+    type: 'filter_stat_outlier',
+    label: '统计离群剔除',
+    category: 'tool',
+    isSource: false, isSink: false,
+    params: [
+      { key: 'threshold', label: 'threshold', type: 'number', min: 0, max: 5, step: 0.1, default: 0.5 },
+      { key: 'k', label: 'k', type: 'number', min: 1, max: 50, step: 1, default: 5 },
+    ],
+    async execute(input, params, ctx) {
+      if (!input) return EMPTY_FRAME;
+      return ctx.executeNode('filter_stat_outlier', input, params);
+    },
+    visualizableMeta: [],
+  },
+  filter_ransac_line: {
+    type: 'filter_ransac_line',
+    label: 'RANSAC 直线',
+    category: 'tool',
+    isSource: false, isSink: false,
+    params: [
+      { key: 'inlierThreshold', label: 'inlierThreshold', type: 'number', min: 0, max: 50, step: 0.1, default: 1.0 },
+      { key: 'maxIterations', label: 'maxIterations', type: 'number', min: 1, max: 1000, step: 1, default: 100 },
+      { key: 'minInlierRatio', label: 'minInlierRatio', type: 'number', min: 0, max: 1, step: 0.05, default: 0.7 },
+      { key: 'enableProjection', label: 'enableProjection', type: 'select', default: 0, options: [{ value: 0, label: '关' }, { value: 1, label: '开' }] },
+    ],
+    async execute(input, params, ctx) {
+      if (!input) return EMPTY_FRAME;
+      return ctx.executeNode('filter_ransac_line', input, params);
+    },
+    visualizableMeta: [],
+  },
 };
 
 /** 从 NodeDef.params 生成默认 params 对象。 */
