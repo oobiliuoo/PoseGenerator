@@ -12,8 +12,10 @@ export function usePipeline() {
   const [outputs, setOutputs] = useState<Record<string, NodeOutput>>({});
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [customPipelines, setCustomPipelines] = useState<Pipeline[]>(() => loadPipelines());
   const abortRef = useRef<AbortController | null>(null);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const outputsRef = useRef<Record<string, NodeOutput>>({});
 
   const ctx: ExecCtx = {
     executeNode: (nodeType, input, params) => apiExecuteNode(nodeType, input, params, abortRef.current?.signal),
@@ -27,7 +29,8 @@ export function usePipeline() {
       abortRef.current = new AbortController();
       setLoading(true);
       try {
-        const out = await runPipeline(nodes, fromIndex, ctx, {});
+        const out = await runPipeline(nodes, fromIndex, ctx, outputsRef.current);
+        outputsRef.current = out;
         setOutputs(out);
       } finally {
         setLoading(false);
@@ -128,17 +131,20 @@ export function usePipeline() {
   const selectPipeline = useCallback((p: Pipeline) => {
     setPipeline(p);
     setOutputs({});
+    outputsRef.current = {};
     setSelectedNodeId(p.nodes[p.nodes.length - 1]?.id ?? null);
     run(p.nodes, 0, true);
   }, [run]);
 
   const saveCurrentAs = useCallback((name: string) => {
     const p: Pipeline = { name, nodes: pipeline.nodes.map(n => ({ ...n, params: { ...n.params } })) };
-    savePipeline(p);
+    const list = savePipeline(p);
+    setCustomPipelines(list);
   }, [pipeline]);
 
   const removePipeline = useCallback((name: string) => {
-    deletePipeline(name);
+    const list = deletePipeline(name);
+    setCustomPipelines(list);
   }, []);
 
   const selectedOutput: PoseFrame | null = selectedNodeId ? getOutput(outputs, selectedNodeId) : null;
@@ -150,7 +156,7 @@ export function usePipeline() {
     selectedOutput,
     loading,
     builtinPipelines: BUILTIN_PIPELINES,
-    customPipelines: loadPipelines(),
+    customPipelines,
     actions: {
       setSelectedNodeId,
       updateNodeParams,

@@ -8,6 +8,7 @@ export default defineConfig({
     proxy: {
       '/generate': { target: 'http://localhost:8220', changeOrigin: true },
       '/health':   { target: 'http://localhost:8220', changeOrigin: true },
+      '/node/execute': { target: 'http://localhost:8220', changeOrigin: true },
       '/api/paths': { target: 'http://localhost:3001', changeOrigin: true },
     },
   },

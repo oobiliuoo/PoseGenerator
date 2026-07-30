@@ -1025,3 +1025,10 @@ button:not(.primary-cta):not(.link):hover:not(:disabled) {
 .node-add button { padding: 3px 8px; font-size: 10px; }
 .node-add-tail { padding-top: 10px; border-top: 1px dashed var(--line); margin-top: 8px; }
 .node-empty { padding: 24px; color: var(--ink-faint); font-family: var(--mono); font-size: 11px; text-align: center; }
+
+/* --- 流水线底栏 ------------------------------------------------------- */
+.pipeline-bar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.pb-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint); }
+.pb-run { background: var(--arc); border: 1px solid var(--arc); color: var(--bg-void); font-family: var(--display); font-weight: 700; padding: 6px 14px; }
+.pb-run:disabled { background: var(--bg-inset); border-color: var(--line); color: var(--ink-faint); }
+.layout { grid-template-columns: 420px minmax(0, 1fr); }
