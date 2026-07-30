@@ -224,6 +224,9 @@ export function NodeCard({ node, output, selected, addableGroups, onSelect, onPa
           {def.type === 'filter_ransac_line' && (
             <div className="nc-note">⚠ RANSAC 结果有随机性,重算可能变化</div>
           )}
+          {def.type === 'filter_ransac_line' && node.params.enableProjection === 1 && (
+            <div className="nc-note">⚠ 启用投影会清空姿态数据(rx/ry/rz 归零)</div>
+          )}
           {/* 源节点:文件选择 */}
           {def.isSource && (
             <label className="nc-file">
