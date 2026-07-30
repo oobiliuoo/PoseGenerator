@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Pipeline, PoseFrame, ExecCtx } from '../types';
 import { runPipeline, getOutput, type NodeOutput } from '../lib/pipeline';
-import { NODE_REGISTRY, makeNode, setCsvFile } from '../lib/nodeRegistry';
+import { NODE_REGISTRY, makeNode } from '../lib/nodeRegistry';
 import { BUILTIN_PIPELINES, loadPipelines, savePipeline, deletePipeline } from '../lib/pipelinesStore';
 import { executeNode as apiExecuteNode } from '../api/node';
+import { sendToPathview, openPathview } from '../api/pathview';
 
 const DEBOUNCE_MS = 300;
 
@@ -17,8 +18,12 @@ export function usePipeline() {
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const outputsRef = useRef<Record<string, NodeOutput>>({});
 
+  const [csvFile, setCsvFileState] = useState<{ name: string; text: string } | null>(null);
+  const csvFileRef = useRef<{ name: string; text: string } | null>(null);
+
   const ctx: ExecCtx = {
     executeNode: (nodeType, input, params) => apiExecuteNode(nodeType, input, params, abortRef.current?.signal),
+    get csvFile() { return csvFileRef.current; },
   };
 
   // 跑流水线:从 fromIndex 开始。可选立即跑(不等 debounce)。
@@ -57,9 +62,10 @@ export function usePipeline() {
     });
   }, [run]);
 
-  // CSV 文件载入:写文本 + 触发 csv_input 重算(及下游)
+  // CSV 文件载入:存 React state + ref,触发 csv_input 重算(及下游)
   const loadCsv = useCallback((name: string, text: string) => {
-    setCsvFile(name, text);
+    csvFileRef.current = { name, text };
+    setCsvFileState({ name, text });
     setPipeline(prev => {
       const csvNode = prev.nodes.find(n => n.type === 'csv_input');
       if (csvNode) run(prev.nodes, prev.nodes.indexOf(csvNode));
@@ -129,6 +135,8 @@ export function usePipeline() {
 
   // 流水线切换/保存/删除
   const selectPipeline = useCallback((p: Pipeline) => {
+    csvFileRef.current = null;
+    setCsvFileState(null);
     setPipeline(p);
     setOutputs({});
     outputsRef.current = {};
@@ -149,6 +157,15 @@ export function usePipeline() {
 
   const selectedOutput: PoseFrame | null = selectedNodeId ? getOutput(outputs, selectedNodeId) : null;
 
+  // pathview 显式推送:读 sink 节点的输入帧并发送。
+  const exportToPathview = useCallback((nodeId: string) => {
+    const frame = getOutput(outputs, nodeId);
+    if (frame && frame.points.length > 0) {
+      sendToPathview(frame.points, String(frame.meta?.fileName ?? 'pose'));
+      openPathview();
+    }
+  }, [outputs]);
+
   return {
     pipeline,
     outputs,
@@ -168,6 +185,7 @@ export function usePipeline() {
       selectPipeline,
       saveCurrentAs,
       removePipeline,
+      exportToPathview,
     },
   };
 }

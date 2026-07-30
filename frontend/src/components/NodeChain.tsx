@@ -13,6 +13,7 @@ interface Props {
   onMove: (id: string, dir: -1 | 1) => void;
   onAddNode: (type: string, afterId?: string) => void;
   onCsvFile: (id: string, name: string, text: string) => void;
+  onExport?: (id: string) => void;
 }
 
 export function NodeChain(props: Props) {
@@ -32,6 +33,7 @@ export function NodeChain(props: Props) {
             onRemove={() => props.onRemove(n.id)}
             onMove={dir => props.onMove(n.id, dir)}
             onCsvFile={(name, text) => props.onCsvFile(n.id, name, text)}
+            onExport={props.onExport ? () => props.onExport!(n.id) : undefined}
           />
           {/* 节点间"添加"按钮 */}
           <div className="node-add">

@@ -12,6 +12,7 @@ interface Props {
   onRemove: () => void;
   onMove: (dir: -1 | 1) => void;
   onCsvFile: (name: string, text: string) => void;
+  onExport?: () => void;
 }
 
 function NumCtrl(p: {
@@ -65,7 +66,7 @@ function NumCtrl(p: {
   );
 }
 
-export function NodeCard({ node, output, selected, onSelect, onParams, onRemove, onMove, onCsvFile }: Props) {
+export function NodeCard({ node, output, selected, onSelect, onParams, onRemove, onMove, onCsvFile, onExport }: Props) {
   const [expanded, setExpanded] = useState(true);
   const def = NODE_REGISTRY[node.type];
   if (!def) return <div className="node-card">未知节点: {node.type}</div>;
@@ -112,7 +113,7 @@ export function NodeCard({ node, output, selected, onSelect, onParams, onRemove,
           ))}
           {/* 终点节点:导出按钮 */}
           {def.isSink && (
-            <button className="nc-export" onClick={e => { e.stopPropagation(); }}
+            <button className="nc-export" onClick={e => { e.stopPropagation(); onExport?.(); }}
               disabled={!frame || frame.points.length === 0}>
               推送到 pathview
             </button>

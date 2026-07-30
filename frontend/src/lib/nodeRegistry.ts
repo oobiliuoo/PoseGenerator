@@ -1,7 +1,6 @@
 import type { NodeDef, PoseFrame, NodeParamSpec } from '../types';
 import { EMPTY_FRAME, DEFAULT_PARAMS, DEFAULT_INITIAL_POSE } from '../types';
 import { parseCsvPoints } from './csv';
-import { sendToPathview } from '../api/pathview';
 
 // ---- pose_generate 参数 schema (8 算法参数 + 初始姿态,复用现有默认值) ----
 const POSE_GEN_PARAMS: NodeParamSpec[] = [
@@ -25,13 +24,6 @@ function packPoseGenParams(p: Record<string, number>): Record<string, any> {
   return { ...algo, initial_pose: { rx: init_rx, ry: init_ry, rz: init_rz } };
 }
 
-// csv_input 的"文件"是交互对象,不进 params。文件文本暂存在模块闭包里,
-// 由 NodeCard 调 setCsvFile 写入,execute 读取。
-let csvFileText: { name: string; text: string } | null = null;
-export function setCsvFile(name: string, text: string) {
-  csvFileText = { name, text };
-}
-
 export const NODE_REGISTRY: Record<string, NodeDef> = {
   csv_input: {
     type: 'csv_input',
@@ -40,11 +32,11 @@ export const NODE_REGISTRY: Record<string, NodeDef> = {
     isSource: true,
     isSink: false,
     params: [],   // 文件不进 params schema
-    async execute(_input, _params, _ctx) {
-      if (!csvFileText) {
+    async execute(_input, _params, ctx) {
+      if (!ctx.csvFile) {
         return { ...EMPTY_FRAME, meta: { error: '未选择文件' } };
       }
-      const res = parseCsvPoints(csvFileText.text);
+      const res = parseCsvPoints(ctx.csvFile.text);
       if (res.error) {
         return { points: [], meta: { error: res.error, ignored: res.ignored } };
       }
@@ -52,7 +44,7 @@ export const NODE_REGISTRY: Record<string, NodeDef> = {
         const r = res.rotations?.[i];
         return r ? { ...p, ...r } : { ...p, rx: 0, ry: 0, rz: 0 };
       });
-      return { points, meta: { fileName: csvFileText.name, hasRotation: !!res.rotations, ignored: res.ignored } };
+      return { points, meta: { fileName: ctx.csvFile.name, hasRotation: !!res.rotations, ignored: res.ignored } };
     },
   },
 
@@ -84,8 +76,7 @@ export const NODE_REGISTRY: Record<string, NodeDef> = {
     params: [],
     async execute(input, _params, _ctx) {
       if (!input) return EMPTY_FRAME;
-      // 副作用:推到 pathview。输出 = 输入(导出不改数据,选中仍可看)。
-      await sendToPathview(input.points, String(input.meta?.fileName ?? 'pose'));
+      // 输出 = 输入(导出不改数据,选中仍可看)。推送由显式按钮触发。
       return input;
     },
   },

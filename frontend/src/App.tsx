@@ -31,6 +31,7 @@ export default function App() {
                 onMove={actions.moveNode}
                 onAddNode={actions.addNode}
                 onCsvFile={(_id, name, text) => actions.loadCsv(name, text)}
+                onExport={actions.exportToPathview}
               />
             </div>
           </div>

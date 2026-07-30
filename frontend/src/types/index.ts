@@ -85,6 +85,8 @@ export interface NodeParamSpec {
 export interface ExecCtx {
   /** 算法节点调后端的 fetch 函数(便于测试时注入 mock)。 */
   executeNode: (nodeType: string, input: PoseFrame, params: Record<string, number>) => Promise<PoseFrame>;
+  /** CSV 文件内容(由 usePipeline 注入,每个流水线独立)。 */
+  csvFile?: { name: string; text: string } | null;
 }
 
 /** 节点定义(注册表项)。 */
