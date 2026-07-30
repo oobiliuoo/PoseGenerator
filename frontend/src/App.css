@@ -994,3 +994,34 @@ button:not(.primary-cta):not(.link):hover:not(:disabled) {
   .ab-hint { display: none; }
   .primary-cta { padding: 10px 16px; font-size: 12px; }
 }
+
+/* --- 节点链 ----------------------------------------------------------- */
+.node-chain { display: flex; flex-direction: column; gap: 0; }
+.node-slot { display: flex; flex-direction: column; }
+.node-card {
+  background: linear-gradient(180deg, var(--bg-panel-2), var(--bg-panel));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.node-card.is-selected { border-color: var(--arc); box-shadow: 0 0 0 1px var(--arc) inset; }
+.nc-head { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--bg-inset); border-bottom: 1px solid var(--line); }
+.nc-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--data); }
+.nc-label { font-family: var(--display); font-weight: 700; font-size: 13px; }
+.nc-cat { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); padding: 1px 5px; border: 1px solid var(--line); border-radius: 2px; }
+.nc-status { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--ink-dim); }
+.nc-status.nc-err { color: var(--danger); }
+.nc-toggle { padding: 2px 6px; background: transparent; border: none; color: var(--ink-dim); cursor: pointer; }
+.nc-body { padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+.nc-file { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-family: var(--mono); font-size: 11px; color: var(--ink-dim); }
+.nc-file input[type='file'] { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.nc-export { width: 100%; padding: 8px; background: var(--arc); border: 1px solid var(--arc); border-radius: 2px; color: var(--bg-void); font-family: var(--display); font-weight: 700; cursor: pointer; }
+.nc-export:disabled { background: var(--bg-inset); border-color: var(--line); color: var(--ink-faint); cursor: not-allowed; }
+.nc-actions { display: flex; gap: 4px; padding: 4px 10px 8px; }
+.nc-actions button { padding: 2px 8px; font-size: 11px; }
+.node-add { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 0; }
+.node-add button { padding: 3px 8px; font-size: 10px; }
+.node-add-tail { padding-top: 10px; border-top: 1px dashed var(--line); margin-top: 8px; }
+.node-empty { padding: 24px; color: var(--ink-faint); font-family: var(--mono); font-size: 11px; text-align: center; }
