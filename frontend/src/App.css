@@ -234,12 +234,17 @@ header h1 .sub {
 }
 /* Preview panel: natural height, no stretch */
 .right .preview-panel { align-self: start; }
-/* Table panel: stretch to the row, internal scroll */
+/* Table panel: stretch to the row, internal scroll.
+   max-height caps it to the viewport so the table scrolls internally
+   instead of growing the page (which left wheel events with nothing
+   to scroll). Budget = header (~56) + app padding-top (18) + the
+   96px reserved for the sticky pipeline-bar at the bottom ≈ 188. */
 .right .table-panel {
   align-self: stretch;
   display: flex;
   flex-direction: column;
   min-height: 0;
+  max-height: calc(100vh - 188px);
 }
 .right .table-panel > .panel-head { flex-shrink: 0; }
 .right .table-panel > .panel-body { flex-shrink: 0; }
