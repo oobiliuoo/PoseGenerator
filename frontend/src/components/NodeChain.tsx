@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { PipelineNode } from '../types';
 import type { NodeOutput } from '../lib/pipeline';
-import { NODE_REGISTRY } from '../lib/nodeRegistry';
-import { NodeCard, type AddableType, type AddableGroup } from './NodeCard';
+import { NODE_REGISTRY, buildAddableGroups } from '../lib/nodeRegistry';
+import { NodeCard } from './NodeCard';
 
 interface Props {
   nodes: PipelineNode[];
@@ -16,28 +16,6 @@ interface Props {
   onAddNode: (type: string, afterId?: string) => void;
   onCsvFile: (id: string, name: string, text: string) => void;
   onExport?: (id: string) => void;
-}
-
-function buildAddableGroups(): AddableGroup[] {
-  const groups: AddableGroup[] = [
-    { group: 'I/O', items: [] },
-    { group: '算法', items: [] },
-    { group: '滤波', items: [] },
-  ];
-  for (const d of Object.values(NODE_REGISTRY)) {
-    const idx = d.category === 'io' ? 0 : d.category === 'algorithm' ? 1 : 2;
-    const t: AddableType = {
-      type: d.type,
-      label: d.label,
-      short: d.type === 'csv_input' ? 'CSV'
-           : d.type === 'pose_generate' ? '姿态'
-           : d.type === 'pathview_export' ? '导出'
-           : d.label,
-      category: d.category,
-    };
-    groups[idx].items.push(t);
-  }
-  return groups;
 }
 
 export function NodeChain(props: Props) {

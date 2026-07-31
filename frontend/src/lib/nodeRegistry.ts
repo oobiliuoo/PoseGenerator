@@ -1,4 +1,4 @@
-import type { NodeDef, PoseFrame, NodeParamSpec } from '../types';
+import type { NodeDef, PoseFrame, NodeParamSpec, NodeRole } from '../types';
 import { EMPTY_FRAME, DEFAULT_PARAMS, DEFAULT_INITIAL_POSE } from '../types';
 import { parseCsvPoints } from './csv';
 
@@ -223,4 +223,68 @@ export function makeNode(type: string): { id: string; type: string; params: Reco
   // 简单 id:类型+随机后缀。
   const id = `${type}_${Math.random().toString(36).slice(2, 6)}`;
   return { id, type, params: defaultParamsFor(type) };
+}
+
+// ---- 添加菜单数据模型 ----
+
+export interface AddableType {
+  type: string;
+  label: string;
+  short: string;
+  category: string;
+  desc: string;
+  role: NodeRole;
+  icon: string;   // 组件内映射到内联 SVG
+}
+
+export interface AddableGroup {
+  group: string;
+  items: AddableType[];
+}
+
+/** 图标 key 映射:节点 type -> 图标语义 key(AddNodeMenu 内据此渲染 SVG)。 */
+const ICON_KEY: Record<string, string> = {
+  csv_input: 'grid',
+  pose_generate: 'axes',
+  pathview_export: 'export',
+  filter_distance: 'wave-cut',
+  filter_angle: 'wave-cut',
+  filter_stat_outlier: 'wave-cut',
+  filter_mean: 'wave',
+  filter_gaussian: 'wave',
+  filter_savgol: 'wave',
+  filter_ransac_line: 'ransac',
+};
+
+/** 短称(沿用旧逻辑)。 */
+function shortOf(type: string, label: string): string {
+  if (type === 'csv_input') return 'CSV';
+  if (type === 'pose_generate') return '姿态';
+  if (type === 'pathview_export') return '导出';
+  return label;
+}
+
+/** 构建添加菜单的四段分组(输入源 / 算法 / 滤波工具 / 输出)。 */
+export function buildAddableGroups(): AddableGroup[] {
+  const groups: AddableGroup[] = [
+    { group: '输入源', items: [] },
+    { group: '算法', items: [] },
+    { group: '滤波工具', items: [] },
+    { group: '输出', items: [] },
+  ];
+  const idx = (role: NodeRole) =>
+    role === 'source' ? 0 : role === 'algorithm' ? 1 : role === 'tool' ? 2 : 3;
+  for (const d of Object.values(NODE_REGISTRY)) {
+    const role = d.role ?? 'tool';
+    groups[idx(role)].items.push({
+      type: d.type,
+      label: d.label,
+      short: shortOf(d.type, d.label),
+      category: d.category,
+      desc: d.desc ?? '',
+      role,
+      icon: ICON_KEY[d.type] ?? 'wave',
+    });
+  }
+  return groups;
 }

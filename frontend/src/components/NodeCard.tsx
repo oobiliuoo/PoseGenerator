@@ -2,19 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { PipelineNode, PoseFrame, NodeParamSpec } from '../types';
 import type { NodeOutput } from '../lib/pipeline';
-import { NODE_REGISTRY } from '../lib/nodeRegistry';
-
-export interface AddableType {
-  type: string;
-  label: string;
-  short: string;
-  category: string;
-}
-
-export interface AddableGroup {
-  group: string;
-  items: AddableType[];
-}
+import { NODE_REGISTRY, type AddableType, type AddableGroup } from '../lib/nodeRegistry';
 
 interface Props {
   node: PipelineNode;
