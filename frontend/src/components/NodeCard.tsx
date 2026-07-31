@@ -1,14 +1,13 @@
 import { useRef, useState } from 'react';
 import type { PipelineNode, PoseFrame, NodeParamSpec } from '../types';
 import type { NodeOutput } from '../lib/pipeline';
-import { NODE_REGISTRY, type AddableGroup } from '../lib/nodeRegistry';
+import { NODE_REGISTRY } from '../lib/nodeRegistry';
 import { AddNodeMenu } from './AddNodeMenu';
 
 interface Props {
   node: PipelineNode;
   output: NodeOutput | undefined;
   selected: boolean;
-  addableGroups: AddableGroup[];
   onSelect: () => void;
   onParams: (patch: Record<string, number>) => void;
   onRemove: () => void;
@@ -69,7 +68,7 @@ function NumCtrl(p: {
   );
 }
 
-export function NodeCard({ node, output, selected, addableGroups, onSelect, onParams, onRemove, onMove, onAddAfter, onCsvFile, onExport }: Props) {
+export function NodeCard({ node, output, selected, onSelect, onParams, onRemove, onMove, onAddAfter, onCsvFile, onExport }: Props) {
   const [expanded, setExpanded] = useState(true);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
   const addBtnRef = useRef<HTMLButtonElement>(null);

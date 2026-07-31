@@ -1101,80 +1101,6 @@ button:not(.primary-cta):not(.link):hover:not(:disabled) {
 .nc-add-toggle.is-open { color: var(--bg-void); background: var(--arc); border-color: var(--arc); }
 .nc-add-toggle:focus-visible { outline: 2px solid var(--arc); outline-offset: 1px; }
 
-.nc-add-menu {
-  position: absolute;          /* overridden to `fixed` inline when portal-rendered */
-  top: calc(100% + 4px);
-  right: 0;                    /* default; portal mode sets left/width via inline style */
-  z-index: 1000;               /* above all in-app clipping containers */
-  min-width: 200px;
-  background: var(--bg-panel);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  box-shadow:
-    0 12px 32px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(34, 211, 238, 0.06);
-  padding: 4px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  /* Ensure the menu isn't a click target for the "close on outside click" listener */
-  animation: nc-add-menu-in 80ms ease-out;
-}
-@keyframes nc-add-menu-in {
-  from { opacity: 0; transform: translateY(-4px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .nc-add-menu { animation: none; }
-}
-.nc-add-item {
-  display: grid;
-  grid-template-columns: 56px 1fr auto;
-  align-items: center;
-  gap: 10px;
-  padding: 7px 9px;
-  font-family: var(--sans);
-  font-size: 12px;
-  color: var(--ink);
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 3px;
-  cursor: pointer;
-  text-align: left;
-  min-height: 0;
-}
-.nc-add-item:hover {
-  background: var(--bg-inset);
-  border-color: var(--line);
-}
-.nc-add-item:focus-visible { outline: 2px solid var(--arc); outline-offset: -1px; }
-.nc-add-cat {
-  font-family: var(--mono);
-  font-size: 9px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
-  padding: 1px 4px;
-  border: 1px solid var(--line);
-  border-radius: 2px;
-  text-align: center;
-  background: rgba(34, 211, 238, 0.04);
-}
-.nc-add-label { font-weight: 500; }
-.nc-add-short {
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--ink-faint);
-  letter-spacing: 0.04em;
-}
-.nc-add-empty {
-  padding: 10px;
-  color: var(--ink-faint);
-  font-family: var(--mono);
-  font-size: 11px;
-  text-align: center;
-}
-
 /* --- 重建:添加节点菜单 (AddNodeMenu) --- */
 .anm-menu {
   z-index: 1000;
@@ -1275,7 +1201,6 @@ button:not(.primary-cta):not(.link):hover:not(:disabled) {
 }
 .node-tail-btn:hover { color: var(--arc); border-color: var(--arc); border-style: solid; background: rgba(255, 182, 39, 0.04); }
 .node-tail-btn.is-open { color: var(--bg-void); background: var(--arc); border-color: var(--arc); border-style: solid; }
-.node-tail-menu { right: 0; left: 0; min-width: 0; }
 .node-empty { padding: 24px; color: var(--ink-faint); font-family: var(--mono); font-size: 11px; text-align: center; }
 
 /* --- 流水线底栏 ------------------------------------------------------- */
@@ -1285,7 +1210,4 @@ button:not(.primary-cta):not(.link):hover:not(:disabled) {
 .pb-run:disabled { background: var(--bg-inset); border-color: var(--line); color: var(--ink-faint); }
 .layout { grid-template-columns: 420px minmax(0, 1fr); }
 
-/* --- 节点添加分组 --- */
-.add-group { display: inline-flex; align-items: center; gap: 4px; margin-right: 10px; }
-.add-group-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); margin-right: 4px; }
 .nc-note { font-family: var(--mono); font-size: 10px; color: var(--arc); padding: 4px 6px; background: rgba(255, 182, 39, 0.08); border-left: 2px solid var(--arc); border-radius: 2px; }
