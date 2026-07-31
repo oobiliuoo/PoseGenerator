@@ -89,6 +89,9 @@ export interface ExecCtx {
   csvFile?: { name: string; text: string } | null;
 }
 
+/** 节点在数据流中的角色(用于添加菜单的角色色点)。 */
+export type NodeRole = 'source' | 'algorithm' | 'tool' | 'sink';
+
 /** 节点定义(注册表项)。 */
 export interface NodeDef {
   type: string;
@@ -101,6 +104,10 @@ export interface NodeDef {
   execute: (input: PoseFrame | null, params: Record<string, number>, ctx: ExecCtx) => Promise<PoseFrame>;
   /** 该节点能可视化哪些 meta key(用户可开关)。第一阶段 pose_generate 为空。 */
   visualizableMeta?: string[];
+  /** 一行描述(添加菜单展示)。 */
+  desc?: string;
+  /** 数据流角色(添加菜单角色色点)。 */
+  role?: NodeRole;
 }
 
 /** 流水线中的一个节点实例。 */

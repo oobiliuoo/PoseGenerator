@@ -29,6 +29,8 @@ export const NODE_REGISTRY: Record<string, NodeDef> = {
     type: 'csv_input',
     label: 'CSV 输入',
     category: 'io',
+    role: 'source',
+    desc: '从 CSV 文件读入轨迹点',
     isSource: true,
     isSink: false,
     params: [],   // 文件不进 params schema
@@ -52,6 +54,8 @@ export const NODE_REGISTRY: Record<string, NodeDef> = {
     type: 'pose_generate',
     label: '姿态生成',
     category: 'algorithm',
+    role: 'algorithm',
+    desc: '由曲率生成焊枪姿态',
     isSource: false,
     isSink: false,
     params: POSE_GEN_PARAMS,
@@ -71,6 +75,8 @@ export const NODE_REGISTRY: Record<string, NodeDef> = {
     type: 'pathview_export',
     label: 'pathview 导出',
     category: 'io',
+    role: 'sink',
+    desc: '推送结果到 pathview',
     isSource: false,
     isSink: true,
     params: [],
@@ -85,6 +91,8 @@ export const NODE_REGISTRY: Record<string, NodeDef> = {
     type: 'filter_distance',
     label: '距离滤波',
     category: 'tool',
+    role: 'tool',
+    desc: '按点间距剔除离群点',
     isSource: false, isSink: false,
     params: [
       { key: 'min_th', label: 'min_th', type: 'number', min: 0, max: 50, step: 0.1, default: 1.0 },
@@ -100,6 +108,8 @@ export const NODE_REGISTRY: Record<string, NodeDef> = {
     type: 'filter_angle',
     label: '角度滤波',
     category: 'tool',
+    role: 'tool',
+    desc: '按方向角变化剔除抖动',
     isSource: false, isSink: false,
     params: [
       { key: 'angleThreshold', label: 'angleThreshold', type: 'number', min: 0, max: 90, step: 1, default: 30.0 },
@@ -115,6 +125,8 @@ export const NODE_REGISTRY: Record<string, NodeDef> = {
     type: 'filter_mean',
     label: '均值平滑',
     category: 'tool',
+    role: 'tool',
+    desc: '邻域均值平滑轨迹',
     isSource: false, isSink: false,
     params: [
       { key: 'radius', label: 'radius', type: 'number', min: 0.1, max: 100, step: 0.1, default: 5.0 },
@@ -129,6 +141,8 @@ export const NODE_REGISTRY: Record<string, NodeDef> = {
     type: 'filter_gaussian',
     label: '高斯平滑',
     category: 'tool',
+    role: 'tool',
+    desc: '高斯核平滑轨迹',
     isSource: false, isSink: false,
     params: [
       { key: 'sigma', label: 'sigma', type: 'number', min: 0.1, max: 10, step: 0.1, default: 1.0 },
@@ -144,6 +158,8 @@ export const NODE_REGISTRY: Record<string, NodeDef> = {
     type: 'filter_savgol',
     label: 'Savitzky-Golay 平滑',
     category: 'tool',
+    role: 'tool',
+    desc: 'Savitzky-Golay 多项式平滑',
     isSource: false, isSink: false,
     params: [
       { key: 'halfWindow', label: 'halfWindow', type: 'number', min: 1, max: 50, step: 1, default: 5 },
@@ -159,6 +175,8 @@ export const NODE_REGISTRY: Record<string, NodeDef> = {
     type: 'filter_stat_outlier',
     label: '统计离群剔除',
     category: 'tool',
+    role: 'tool',
+    desc: '统计离群点剔除',
     isSource: false, isSink: false,
     params: [
       { key: 'threshold', label: 'threshold', type: 'number', min: 0, max: 5, step: 0.1, default: 0.5 },
@@ -174,6 +192,8 @@ export const NODE_REGISTRY: Record<string, NodeDef> = {
     type: 'filter_ransac_line',
     label: 'RANSAC 直线',
     category: 'tool',
+    role: 'tool',
+    desc: 'RANSAC 直线拟合(结果有随机性)',
     isSource: false, isSink: false,
     params: [
       { key: 'inlierThreshold', label: 'inlierThreshold', type: 'number', min: 0, max: 50, step: 0.1, default: 1.0 },
