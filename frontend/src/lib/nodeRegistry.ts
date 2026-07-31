@@ -207,6 +207,23 @@ export const NODE_REGISTRY: Record<string, NodeDef> = {
     },
     visualizableMeta: [],
   },
+  filter_bspline: {
+    type: 'filter_bspline',
+    label: 'B样条均匀重建',
+    category: 'tool',
+    isSource: false, isSink: false,
+    params: [
+      { key: 'step', label: 'step', type: 'number', min: 0.1, max: 100, step: 0.1, default: 5.0 },
+      { key: 'Tol3D', label: 'Tol3D', type: 'number', min: 0.1, max: 20, step: 0.1, default: 3.0 },
+      { key: 'degMin', label: 'degMin', type: 'number', min: 1, max: 8, step: 1, default: 3 },
+      { key: 'continuity', label: 'continuity', type: 'number', min: 0, max: 2, step: 1, default: 2 },
+    ],
+    async execute(input, params, ctx) {
+      if (!input) return EMPTY_FRAME;
+      return ctx.executeNode('filter_bspline', input, params);
+    },
+    visualizableMeta: [],
+  },
 };
 
 /** 从 NodeDef.params 生成默认 params 对象。 */

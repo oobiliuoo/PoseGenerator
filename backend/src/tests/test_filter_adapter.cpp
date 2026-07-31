@@ -47,6 +47,15 @@ int main() {
     runSmoke("filter_stat_outlier", {{"threshold", 0.5}, {"k", 5}});
     runSmoke("filter_ransac_line", {{"inlierThreshold", 1.0}, {"maxIterations", 100}, {"minInlierRatio", 0.7}, {"enableProjection", 0}});
 
+    // B 样条均匀重建:自由函数,返回码非0抛错,成功应 >=2 点(直线 190mm / step5 → 多点)
+    {
+        FilterRequest r; r.node_type = "filter_bspline"; r.points = pts;
+        r.params["step"] = 5.0; r.params["Tol3D"] = 3.0; r.params["degMin"] = 3; r.params["continuity"] = 2;
+        auto out = runFilter(r);
+        assert(out.result.size() >= 2);
+        std::cout << "filter_bspline: " << out.result.size() << " pts (in 20)\n";
+    }
+
     std::cout << "test_filter_adapter OK\n";
     return 0;
 }
