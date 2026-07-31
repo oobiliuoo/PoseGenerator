@@ -51,6 +51,7 @@ const PLANE_LABELS: Record<Plane, string> = {
 
 export function Preview2D({ points }: Props) {
   const [plane, setPlane] = useState<Plane>('xy');
+  const [showPose, setShowPose] = useState(true);
   const geom = useMemo(() => project(points, plane), [points, plane]);
 
   return (
@@ -67,6 +68,18 @@ export function Preview2D({ points }: Props) {
             >{PLANE_LABELS[p]}</button>
           ))}
         </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={showPose}
+          aria-label="显示姿态方向"
+          className={showPose ? 'pose-toggle on' : 'pose-toggle'}
+          onClick={() => setShowPose(v => !v)}
+          title={showPose ? '隐藏姿态方向' : '显示姿态方向'}
+        >
+          <span className="pose-toggle-dot" aria-hidden="true" />
+          姿态
+        </button>
       </div>
 
       {!geom ? (
@@ -90,7 +103,7 @@ export function Preview2D({ points }: Props) {
             return (
               <g key={i}>
                 <circle cx={g.X} cy={g.Y} r={3} fill="#ffb627" stroke="#0a0c0f" strokeWidth={1} />
-                {len >= 1e-3 && (
+                {showPose && len >= 1e-3 && (
                   <line x1={g.X} y1={g.Y} x2={g.X + g.dx} y2={g.Y + g.dy}
                     stroke="#ffb627" strokeWidth={2} opacity={0.8} />
                 )}

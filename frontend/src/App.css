@@ -648,6 +648,40 @@ select:focus { border-color: var(--arc); }
   color: var(--bg-void);
   font-weight: 600;
 }
+/* Pose-direction toggle: pill button in the preview toolbar.
+   Amber dot dims to faint when off; matches seg control height. */
+.pose-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  min-height: 30px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--bg-inset);
+  color: var(--ink-faint);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.pose-toggle:hover { color: var(--ink-dim); border-color: var(--line-soft); }
+.pose-toggle.on {
+  color: var(--ink);
+  border-color: rgba(255, 182, 39, 0.5);
+}
+.pose-toggle-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ink-faint);
+  transition: background 0.15s, box-shadow 0.15s;
+}
+.pose-toggle.on .pose-toggle-dot {
+  background: var(--arc);
+  box-shadow: 0 0 6px rgba(255, 182, 39, 0.6);
+}
 
 .pose-table-wrap {
   max-height: 520px;
