@@ -24,3 +24,13 @@ data/
 
 # TypeScript build cache
 *.tsbuildinfo
+
+# Local tool scratch (playwright, workbuddy)
+.playwright-mcp/
+.workbuddy/
+
+# Claude Code session-local (keep skills, ignore rest)
+.claude/sessions/
+.claude/projects/
+.claude/history/
+.claude/settings.local.json
