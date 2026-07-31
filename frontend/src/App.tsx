@@ -1,11 +1,19 @@
+import { useMemo } from 'react';
 import { usePipeline } from './hooks/usePipeline';
 import { NodeChain } from './components/NodeChain';
 import { NodeResult } from './components/NodeResult';
 import { PipelineBar } from './components/PipelineBar';
+import { NODE_REGISTRY } from './lib/nodeRegistry';
 
 export default function App() {
   const { pipeline, outputs, selectedNodeId, selectedOutput, loading,
     builtinPipelines, customPipelines, actions } = usePipeline();
+
+  // 选中节点的 label(用于 CSV 导出文件名)
+  const selectedNodeName = useMemo(() => {
+    const node = pipeline.nodes.find(n => n.id === selectedNodeId);
+    return node ? (NODE_REGISTRY[node.type]?.label ?? node.type) : null;
+  }, [pipeline.nodes, selectedNodeId]);
 
   return (
     <div className="app">
@@ -38,7 +46,7 @@ export default function App() {
         </aside>
 
         <main className="right">
-          <NodeResult frame={selectedOutput} loading={loading} />
+          <NodeResult frame={selectedOutput} loading={loading} nodeName={selectedNodeName} />
         </main>
       </div>
 

@@ -1211,3 +1211,5 @@ button:not(.primary-cta):not(.link):hover:not(:disabled) {
 .layout { grid-template-columns: 420px minmax(0, 1fr); }
 
 .nc-note { font-family: var(--mono); font-size: 10px; color: var(--arc); padding: 4px 6px; background: rgba(255, 182, 39, 0.08); border-left: 2px solid var(--arc); border-radius: 2px; }
+/* 位姿数据流标题栏的 CSV 导出按钮(复用 link 风格,推到右侧) */
+.nc-export-csv { margin-left: auto; font-size: 11px; }

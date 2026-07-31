@@ -1,5 +1,5 @@
 import Papa from 'papaparse';
-import type { Point, Rotation } from '../types';
+import type { Point, PosePoint, Rotation } from '../types';
 
 export interface CsvParseResult {
   points: Point[];
@@ -102,4 +102,42 @@ export function parseCsvPoints(text: string): CsvParseResult {
     }
   }
   return { points, rotations, ignored, header: isHeader, mapping };
+}
+
+/**
+ * 把位姿点序列化成 CSV 文本（带表头 x,y,z,rx,ry,rz）。
+ */
+export function pointsToCsv(points: PosePoint[]): string {
+  const rows = points.map(p => [p.x, p.y, p.z, p.rx, p.ry, p.rz]);
+  return Papa.unparse({
+    fields: ['x', 'y', 'z', 'rx', 'ry', 'rz'],
+    data: rows,
+  });
+}
+
+/**
+ * 触发浏览器下载 CSV：文件名 = `<nodeName>_<YYYYMMDD-HHMMSS>.csv`。
+ * nodeName 为空时用 'pose' 兜底。文件名里的非法字符（/ \ : * ? " < > |）替换为 _。
+ */
+export function downloadPointsCsv(points: PosePoint[], nodeName: string | null): void {
+  if (points.length === 0) return;
+  const safe = (nodeName && nodeName.trim()) ? nodeName.trim() : 'pose';
+  const safeName = safe.replace(/[\\/:*?"<>|]/g, '_');
+  const now = new Date();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const ts = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}` +
+    `-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+  const fileName = `${safeName}_${ts}.csv`;
+
+  const csv = pointsToCsv(points);
+  // 加 BOM 让 Excel 正确识别 UTF-8（与 pathview CSV 习惯一致）
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
