@@ -51,7 +51,7 @@ const ROLE_COLOR: Record<string, string> = {
 };
 
 interface Props {
-  triggerRef: React.RefObject<HTMLElement>;
+  triggerRef: React.RefObject<HTMLElement | null>;
   open: boolean;
   onClose: () => void;
   onPick: (type: string) => void;

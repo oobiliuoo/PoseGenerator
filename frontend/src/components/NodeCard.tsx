@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { useRef, useState } from 'react';
 import type { PipelineNode, PoseFrame, NodeParamSpec } from '../types';
 import type { NodeOutput } from '../lib/pipeline';
-import { NODE_REGISTRY, type AddableType, type AddableGroup } from '../lib/nodeRegistry';
+import { NODE_REGISTRY, type AddableGroup } from '../lib/nodeRegistry';
+import { AddNodeMenu } from './AddNodeMenu';
 
 interface Props {
   node: PipelineNode;
@@ -72,9 +72,7 @@ function NumCtrl(p: {
 export function NodeCard({ node, output, selected, addableGroups, onSelect, onParams, onRemove, onMove, onAddAfter, onCsvFile, onExport }: Props) {
   const [expanded, setExpanded] = useState(true);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
-  const addMenuRef = useRef<HTMLDivElement>(null);
   const addBtnRef = useRef<HTMLButtonElement>(null);
-  const [addMenuPos, setAddMenuPos] = useState<{ left: number; top: number; alignRight: boolean } | null>(null);
   const def = NODE_REGISTRY[node.type];
   if (!def) return <div className="node-card">未知节点: {node.type}</div>;
 
@@ -87,58 +85,6 @@ export function NodeCard({ node, output, selected, addableGroups, onSelect, onPa
     reader.onload = () => onCsvFile(f.name, String(reader.result ?? ''));
     reader.readAsText(f);
   };
-
-  // Compute popover position. Pin it to the **top of the node-chain panel**
-  // (just below the panel head) so it never overlaps a card body, and
-  // right-align its right edge to the + trigger so the visual link is kept.
-  // fixed coords + closest('.panel') so we don't depend on any parent layout.
-  useEffect(() => {
-    if (!addMenuOpen || !addBtnRef.current) { setAddMenuPos(null); return; }
-    const compute = () => {
-      const btn = addBtnRef.current!;
-      const panel = btn.closest('.panel') as HTMLElement | null;
-      if (!panel) { setAddMenuPos(null); return; }
-      const pr = panel.getBoundingClientRect();
-      const br = btn.getBoundingClientRect();
-      // First node-card head is right under the panel head — use its top as anchor.
-      const firstHead = panel.querySelector('.nc-head') as HTMLElement | null;
-      const headTop = firstHead
-        ? firstHead.getBoundingClientRect().top
-        : pr.top + 56;   // fallback = panel head + body padding
-      setAddMenuPos({
-        left: br.right,
-        top: headTop - 4,    // tuck just above the first card head
-        alignRight: true,
-      });
-    };
-    compute();
-    window.addEventListener('scroll', compute, true);
-    window.addEventListener('resize', compute);
-    return () => {
-      window.removeEventListener('scroll', compute, true);
-      window.removeEventListener('resize', compute);
-    };
-  }, [addMenuOpen]);
-
-  // Close add-menu on outside click / Escape
-  useEffect(() => {
-    if (!addMenuOpen) return;
-    const onDown = (e: MouseEvent) => {
-      const t = e.target as Node;
-      if (addMenuRef.current && addMenuRef.current.contains(t)) return;
-      if (addBtnRef.current && addBtnRef.current.contains(t)) return;
-      setAddMenuOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setAddMenuOpen(false);
-    };
-    document.addEventListener('mousedown', onDown);
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('mousedown', onDown);
-      document.removeEventListener('keydown', onKey);
-    };
-  }, [addMenuOpen]);
 
   return (
     <div className={`node-card${selected ? ' is-selected' : ''}`} onClick={onSelect}>
@@ -159,43 +105,13 @@ export function NodeCard({ node, output, selected, addableGroups, onSelect, onPa
             onClick={e => { e.stopPropagation(); setAddMenuOpen(x => !x); }}
           >+</button>
         </span>
-        {addMenuOpen && addMenuPos && createPortal(
-          <div
-            className="nc-add-menu"
-            ref={addMenuRef}
-            role="menu"
-            aria-label="选择要插入的节点类型"
-            style={{
-              position: 'fixed',
-              left: addMenuPos.left,
-              top: addMenuPos.top,
-              transform: addMenuPos.alignRight ? 'translate(-100%, -100%)' : 'translate(0, -100%)',
-            }}
-            onClick={e => e.stopPropagation()}
-          >
-            {addableGroups.length === 0 && (
-              <div className="nc-add-empty">无可用节点</div>
-            )}
-            {addableGroups.map(g => (
-              <span key={g.group} className="add-group">
-                <span className="add-group-label">{g.group}</span>
-                {g.items.map(t => (
-                  <button
-                    key={t.type}
-                    role="menuitem"
-                    className="nc-add-item"
-                    onClick={() => { onAddAfter(t.type); setAddMenuOpen(false); }}
-                  >
-                    <span className="nc-add-cat">{t.category}</span>
-                    <span className="nc-add-label">{t.label}</span>
-                    <span className="nc-add-short">+ {t.short}</span>
-                  </button>
-                ))}
-              </span>
-            ))}
-          </div>,
-          document.body
-        )}
+        <AddNodeMenu
+          triggerRef={addBtnRef}
+          open={addMenuOpen}
+          onClose={() => setAddMenuOpen(false)}
+          onPick={type => onAddAfter(type)}
+          align="right"
+        />
         <button className="nc-toggle" onClick={e => { e.stopPropagation(); setExpanded(x => !x); }} aria-label={expanded ? '折叠' : '展开'}>
           {expanded ? '▾' : '▸'}
         </button>
