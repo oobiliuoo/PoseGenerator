@@ -230,7 +230,6 @@ export function makeNode(type: string): { id: string; type: string; params: Reco
 export interface AddableType {
   type: string;
   label: string;
-  short: string;
   category: string;
   desc: string;
   role: NodeRole;
@@ -256,14 +255,6 @@ const ICON_KEY: Record<string, string> = {
   filter_ransac_line: 'ransac',
 };
 
-/** 短称(沿用旧逻辑)。 */
-function shortOf(type: string, label: string): string {
-  if (type === 'csv_input') return 'CSV';
-  if (type === 'pose_generate') return '姿态';
-  if (type === 'pathview_export') return '导出';
-  return label;
-}
-
 /** 构建添加菜单的四段分组(输入源 / 算法 / 滤波工具 / 输出)。 */
 export function buildAddableGroups(): AddableGroup[] {
   const groups: AddableGroup[] = [
@@ -279,7 +270,6 @@ export function buildAddableGroups(): AddableGroup[] {
     groups[idx(role)].items.push({
       type: d.type,
       label: d.label,
-      short: shortOf(d.type, d.label),
       category: d.category,
       desc: d.desc ?? '',
       role,

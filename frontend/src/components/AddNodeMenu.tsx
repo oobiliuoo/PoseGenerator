@@ -72,7 +72,7 @@ export function AddNodeMenu({ triggerRef, open, onClose, onPick, align = 'left' 
       const W = 340;
       const left = align === 'right' ? br.right - W : br.left;
       const downTop = br.bottom + 6;
-      const menuH = 420; // 估算上限;实际由内容撑开,翻转判断用保守值
+      const menuH = 560; // 估算上限;实际由内容撑开,翻转判断用保守值
       const flip = downTop + menuH > window.innerHeight;
       setPos({
         left: Math.max(8, Math.min(left, window.innerWidth - W - 8)),
@@ -115,6 +115,18 @@ export function AddNodeMenu({ triggerRef, open, onClose, onPick, align = 'left' 
       role="menu"
       aria-label="选择要插入的节点类型"
       style={{ position: 'fixed', left: pos.left, top: pos.top, width: 340 }}
+      onKeyDown={e => {
+        const items = e.currentTarget.querySelectorAll<HTMLElement>('[role="menuitem"]');
+        if (items.length === 0) return;
+        const idx = Array.prototype.indexOf.call(items, document.activeElement);
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          items[idx < 0 || idx >= items.length - 1 ? 0 : idx + 1].focus();
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          items[idx < 0 || idx === 0 ? items.length - 1 : idx - 1].focus();
+        }
+      }}
     >
       {groups.map(g => (
         <section key={g.group} className="anm-group">

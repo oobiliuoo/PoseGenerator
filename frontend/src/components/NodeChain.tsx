@@ -20,7 +20,7 @@ interface Props {
 export function NodeChain(props: Props) {
   const { nodes, outputs, selectedNodeId } = props;
 
-  // Tail "+" is the appen entry. Once any node exists the
+  // Tail "+" is the append entry. Once any node exists the
   // user can extend the chain from any node's head-bar "↑ ↓ × +" cluster.
   const [tailOpen, setTailOpen] = useState(false);
   const tailBtnRef = useRef<HTMLButtonElement>(null);
