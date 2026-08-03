@@ -311,6 +311,7 @@ button.link {
   transition: color 0.15s;
 }
 button.link:hover { color: var(--arc); }
+button.link:disabled { color: var(--ink-faint); opacity: 0.45; cursor: not-allowed; }
 button.link:focus-visible { outline: 2px solid var(--arc); outline-offset: 2px; border-radius: 2px; }
 
 /* =========================================================================

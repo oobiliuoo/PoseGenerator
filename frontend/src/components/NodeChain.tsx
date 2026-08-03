@@ -8,6 +8,8 @@ interface Props {
   nodes: PipelineNode[];
   outputs: Record<string, NodeOutput>;
   selectedNodeId: string | null;
+  collapsedIds: ReadonlySet<string>;
+  onToggleOne: (id: string) => void;
   onSelect: (id: string) => void;
   onParams: (id: string, patch: Record<string, number>) => void;
   onRemove: (id: string) => void;
@@ -18,7 +20,7 @@ interface Props {
 }
 
 export function NodeChain(props: Props) {
-  const { nodes, outputs, selectedNodeId } = props;
+  const { nodes, outputs, selectedNodeId, collapsedIds, onToggleOne } = props;
 
   // Tail "+" is the append entry. Once any node exists the
   // user can extend the chain from any node's head-bar "↑ ↓ × +" cluster.
@@ -33,6 +35,8 @@ export function NodeChain(props: Props) {
             node={n}
             output={outputs[n.id]}
             selected={selectedNodeId === n.id}
+            expanded={!collapsedIds.has(n.id)}
+            onToggleExpanded={() => onToggleOne(n.id)}
             onSelect={() => props.onSelect(n.id)}
             onParams={patch => props.onParams(n.id, patch)}
             onRemove={() => props.onRemove(n.id)}

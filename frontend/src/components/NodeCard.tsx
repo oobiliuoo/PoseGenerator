@@ -8,6 +8,8 @@ interface Props {
   node: PipelineNode;
   output: NodeOutput | undefined;
   selected: boolean;
+  expanded: boolean;
+  onToggleExpanded: () => void;
   onSelect: () => void;
   onParams: (patch: Record<string, number>) => void;
   onRemove: () => void;
@@ -68,8 +70,7 @@ function NumCtrl(p: {
   );
 }
 
-export function NodeCard({ node, output, selected, onSelect, onParams, onRemove, onMove, onAddAfter, onCsvFile, onExport }: Props) {
-  const [expanded, setExpanded] = useState(true);
+export function NodeCard({ node, output, selected, expanded, onToggleExpanded, onSelect, onParams, onRemove, onMove, onAddAfter, onCsvFile, onExport }: Props) {
   const [addMenuOpen, setAddMenuOpen] = useState(false);
   const addBtnRef = useRef<HTMLButtonElement>(null);
   const def = NODE_REGISTRY[node.type];
@@ -111,7 +112,7 @@ export function NodeCard({ node, output, selected, onSelect, onParams, onRemove,
           onPick={type => onAddAfter(type)}
           align="right"
         />
-        <button className="nc-toggle" onClick={e => { e.stopPropagation(); setExpanded(x => !x); }} aria-label={expanded ? '折叠' : '展开'}>
+        <button className="nc-toggle" onClick={e => { e.stopPropagation(); onToggleExpanded(); }} aria-label={expanded ? '折叠' : '展开'}>
           {expanded ? '▾' : '▸'}
         </button>
       </div>
