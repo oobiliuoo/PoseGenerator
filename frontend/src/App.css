@@ -105,20 +105,17 @@ header {
   flex-wrap: wrap;
 }
 .brand { display: flex; align-items: center; gap: 14px; }
+/* 品牌容器:保留琥珀渐变作为品牌色,内部嵌入三节点 icon */
 .brand-mark {
   width: 26px;
   height: 26px;
-  border-radius: 4px;
+  border-radius: 6px;
   background: linear-gradient(135deg, var(--arc) 0%, #ff8a3d 100%);
-  position: relative;
-  box-shadow: 0 0 0 1px rgba(255, 182, 39, 0.35), inset 0 0 0 1px rgba(0, 0, 0, 0.4);
-}
-.brand-mark::after {
-  content: '';
-  position: absolute;
-  inset: 5px;
-  border-radius: 2px;
-  border: 1px solid rgba(0, 0, 0, 0.55);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #1a0f00; /* 深棕,确保 1.5px stroke 在琥珀底色上可读 */
+  box-shadow: 0 0 0 1px rgba(255, 182, 39, 0.35);
 }
 header h1 {
   margin: 0;
@@ -1010,6 +1007,15 @@ button:not(.primary-cta):not(.link):hover:not(:disabled) {
   border-color: var(--line-bright);
   color: var(--ink);
   background: rgba(255, 255, 255, 0.02);
+}
+
+/* button 内含 icon 时,自动 flex 居中(图标 + 文字) */
+button:has(> svg),
+button:has(> span > svg) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 /* =========================================================================

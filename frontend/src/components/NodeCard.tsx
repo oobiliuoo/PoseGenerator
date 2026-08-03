@@ -3,6 +3,7 @@ import type { PipelineNode, PoseFrame, NodeParamSpec } from '../types';
 import type { NodeOutput } from '../lib/pipeline';
 import { NODE_REGISTRY } from '../lib/nodeRegistry';
 import { AddNodeMenu } from './AddNodeMenu';
+import { Icon } from './icons';
 
 interface Props {
   node: PipelineNode;
@@ -150,7 +151,7 @@ export function NodeCard({ node, output, selected, expanded, onToggleExpanded, o
           {def.isSink && (
             <button className="nc-export" onClick={e => { e.stopPropagation(); onExport?.(); }}
               disabled={!frame || frame.points.length === 0}>
-              推送到 pathview
+              <Icon name="send" size={14} /><span>推送到 pathview</span>
             </button>
           )}
         </div>

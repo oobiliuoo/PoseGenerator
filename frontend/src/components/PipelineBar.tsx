@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Pipeline } from '../types';
 import { BackendStatus } from './BackendStatus';
+import { Icon } from './icons';
 
 interface Props {
   current: Pipeline;
@@ -47,10 +48,14 @@ export function PipelineBar(props: Props) {
           <button onClick={() => setNaming(false)}>取消</button>
         </span>
       ) : (
-        <button onClick={() => { setNaming(true); setDraft(current.name === '默认' ? '我的流水线' : current.name); }}>+ 保存当前</button>
+        <button onClick={() => { setNaming(true); setDraft(current.name === '默认' ? '我的流水线' : current.name); }}>
+          <Icon name="save" size={14} /><span>保存当前</span>
+        </button>
       )}
       <span className="preset-sep" aria-hidden="true" />
-      <button className="pb-run" onClick={props.onRunAll} disabled={props.loading}>{props.loading ? '运行中…' : '运行全部'}</button>
+      <button className="pb-run" onClick={props.onRunAll} disabled={props.loading}>
+        <Icon name="play" size={14} /><span>{props.loading ? '运行中…' : '运行全部'}</span>
+      </button>
       <span style={{ marginLeft: 'auto' }}><BackendStatus /></span>
     </div>
   );

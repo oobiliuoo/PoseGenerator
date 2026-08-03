@@ -3,6 +3,7 @@ import { usePipeline } from './hooks/usePipeline';
 import { NodeChain } from './components/NodeChain';
 import { NodeResult } from './components/NodeResult';
 import { PipelineBar } from './components/PipelineBar';
+import { Icon } from './components/icons';
 import { NODE_REGISTRY } from './lib/nodeRegistry';
 
 export default function App() {
@@ -33,7 +34,7 @@ export default function App() {
     <div className="app">
       <header>
         <div className="brand">
-          <span className="brand-mark" aria-hidden="true" />
+          <span className="brand-mark"><Icon name="brand" size={18} /></span>
           <h1>PoseGenerator<span className="sub">点位流水线 · ZYX</span></h1>
         </div>
       </header>
