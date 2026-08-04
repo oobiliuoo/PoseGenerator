@@ -1,5 +1,6 @@
 import type { Pipeline } from '../types';
 import { makeNode } from './nodeRegistry';
+import { deleteCsvText } from './csvStore';
 
 const STORAGE_KEY = 'pose_generator_pipelines';
 
@@ -32,8 +33,10 @@ export function savePipeline(p: Pipeline): Pipeline[] {
   return list;
 }
 
-export function deletePipeline(name: string): Pipeline[] {
+export async function deletePipeline(name: string): Promise<Pipeline[]> {
   const list = loadPipelines().filter(x => x.name !== name);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  // 同步删 IndexedDB 里该流水线绑定的 CSV 文本,避免垃圾累积
+  await deleteCsvText(name).catch(() => { /* 删不掉不阻塞 UI */ });
   return list;
 }

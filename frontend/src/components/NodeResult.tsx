@@ -1,9 +1,9 @@
 import type { PoseFrame } from '../types';
-import { Preview2D } from './Preview2D';
+import { Preview2D, type Plane } from './Preview2D';
 import { PoseTable } from './PoseTable';
 import { downloadPointsCsv } from '../lib/csv';
 
-export function NodeResult({ frame, loading, nodeName }: { frame: PoseFrame | null; loading: boolean; nodeName: string | null }) {
+export function NodeResult({ frame, loading, nodeName, plane, showPose }: { frame: PoseFrame | null; loading: boolean; nodeName: string | null; plane: Plane; showPose: boolean }) {
   const points = frame?.points ?? [];
   // 两面板并列:投影(.preview-panel)与位姿数据流(.table-panel)
   // 作为 .right 网格的两列;窄屏下由响应式断点自动堆叠。
@@ -18,7 +18,7 @@ export function NodeResult({ frame, loading, nodeName }: { frame: PoseFrame | nu
           </span>
         </div>
         <div className="panel-body">
-          <Preview2D points={points} />
+          <Preview2D points={points} plane={plane} showPose={showPose} />
         </div>
       </div>
       <div className="panel table-panel">

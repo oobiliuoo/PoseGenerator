@@ -3,6 +3,7 @@ import type { Pipeline, PoseFrame, ExecCtx } from '../types';
 import { runPipeline, getOutput, type NodeOutput } from '../lib/pipeline';
 import { NODE_REGISTRY, makeNode } from '../lib/nodeRegistry';
 import { BUILTIN_PIPELINES, loadPipelines, savePipeline, deletePipeline } from '../lib/pipelinesStore';
+import { saveCsvText, loadCsvText } from '../lib/csvStore';
 import { executeNode as apiExecuteNode } from '../api/node';
 import { sendToPathview, openPathview } from '../api/pathview';
 
@@ -134,24 +135,39 @@ export function usePipeline() {
   }, [pipeline.nodes, selectedNodeId]);
 
   // 流水线切换/保存/删除
-  const selectPipeline = useCallback((p: Pipeline) => {
-    csvFileRef.current = null;
-    setCsvFileState(null);
+  const selectPipeline = useCallback(async (p: Pipeline) => {
     setPipeline(p);
     setOutputs({});
     outputsRef.current = {};
     setSelectedNodeId(p.nodes[p.nodes.length - 1]?.id ?? null);
-    run(p.nodes, 0, true);
+    // 恢复 CSV 输入源:从 IndexedDB 读回文本(key=流水线名)
+    const text = p.csvFileName ? await loadCsvText(p.name).catch(() => null) : null;
+    if (p.csvFileName && text) {
+      csvFileRef.current = { name: p.csvFileName, text };
+      setCsvFileState({ name: p.csvFileName, text });
+      run(p.nodes, 0, true);
+    } else {
+      csvFileRef.current = null;
+      setCsvFileState(null);
+      run(p.nodes, 0, true);
+    }
   }, [run]);
 
-  const saveCurrentAs = useCallback((name: string) => {
-    const p: Pipeline = { name, nodes: pipeline.nodes.map(n => ({ ...n, params: { ...n.params } })) };
+  const saveCurrentAs = useCallback(async (name: string) => {
+    const csv = csvFileRef.current;
+    const p: Pipeline = {
+      name,
+      nodes: pipeline.nodes.map(n => ({ ...n, params: { ...n.params } })),
+      csvFileName: csv?.name,
+    };
+    // CSV 文本落 IndexedDB(绕开 localStorage 大小限制),仅文件名进 pipeline 结构
+    if (csv) await saveCsvText(name, csv.text).catch(() => { /* 存不下不阻塞 */ });
     const list = savePipeline(p);
     setCustomPipelines(list);
   }, [pipeline]);
 
-  const removePipeline = useCallback((name: string) => {
-    const list = deletePipeline(name);
+  const removePipeline = useCallback(async (name: string) => {
+    const list = await deletePipeline(name);
     setCustomPipelines(list);
   }, []);
 

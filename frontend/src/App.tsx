@@ -2,9 +2,14 @@ import { useMemo, useState } from 'react';
 import { usePipeline } from './hooks/usePipeline';
 import { NodeChain } from './components/NodeChain';
 import { NodeResult } from './components/NodeResult';
+import { AllNodesView } from './components/AllNodesView';
 import { PipelineBar } from './components/PipelineBar';
+import { BackendStatus } from './components/BackendStatus';
 import { Icon } from './components/icons';
 import { NODE_REGISTRY } from './lib/nodeRegistry';
+import { PLANE_LABELS, type Plane } from './components/Preview2D';
+
+const PLANES: Plane[] = ['xy', 'xz', 'yz'];
 
 export default function App() {
   const { pipeline, outputs, selectedNodeId, selectedOutput, loading,
@@ -24,6 +29,12 @@ export default function App() {
     });
   };
 
+  // 结果区视图模式:single=选中节点完整视图;all=全部节点投影小图
+  const [viewMode, setViewMode] = useState<'single' | 'all'>('single');
+  // 2D 投影全局视角与姿态显示(操作栏控制,单/全部模式共用)
+  const [plane, setPlane] = useState<Plane>('xy');
+  const [showPose, setShowPose] = useState(true);
+
   // 选中节点的 label(用于 CSV 导出文件名)
   const selectedNodeName = useMemo(() => {
     const node = pipeline.nodes.find(n => n.id === selectedNodeId);
@@ -37,6 +48,7 @@ export default function App() {
           <span className="brand-mark"><Icon name="brand" size={18} /></span>
           <h1>PoseGenerator<span className="sub">点位流水线 · ZYX</span></h1>
         </div>
+        <BackendStatus />
       </header>
 
       <div className="layout">
@@ -70,8 +82,17 @@ export default function App() {
           </div>
         </aside>
 
-        <main className="right">
-          <NodeResult frame={selectedOutput} loading={loading} nodeName={selectedNodeName} />
+        <main className={`right right--${viewMode}`}>
+          {viewMode === 'single'
+            ? <NodeResult frame={selectedOutput} loading={loading} nodeName={selectedNodeName} plane={plane} showPose={showPose} />
+            : <AllNodesView
+                nodes={pipeline.nodes}
+                outputs={outputs}
+                selectedNodeId={selectedNodeId}
+                loading={loading}
+                plane={plane}
+                showPose={showPose}
+              />}
         </main>
       </div>
 
@@ -84,6 +105,12 @@ export default function App() {
         onDelete={actions.removePipeline}
         onRunAll={actions.runAll}
         loading={loading}
+        viewMode={viewMode}
+        onSetViewMode={setViewMode}
+        plane={plane}
+        onPlaneChange={setPlane}
+        showPose={showPose}
+        onToggleShowPose={() => setShowPose(v => !v)}
       />
     </div>
   );

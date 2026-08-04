@@ -229,6 +229,52 @@ header h1 .sub {
   min-height: 0;                /* required so internal scroll works */
   align-items: start;           /* preview keeps its natural height */
 }
+
+/* 全部节点视图:单列纵向,内部滚动 */
+.all-view {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-auto-rows: 1fr;          /* 行均分容器高度,节点多则行矮,少则高 */
+  gap: 12px;
+  align-items: stretch;
+  height: calc(100vh - 220px);  /* 固定占满可用高度,行在此范围内均分 */
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.all-card {
+  background: linear-gradient(180deg, var(--bg-panel-2), var(--bg-panel));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;                /* 允许收缩,防溢出 */
+}
+.all-card.is-selected { border-color: var(--arc); box-shadow: 0 0 0 1px var(--arc) inset; }
+.all-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-dim);
+  margin-bottom: 6px;
+  flex-shrink: 0;
+}
+.all-card-label { color: var(--ink); }
+.all-card-count { display: inline-flex; align-items: center; gap: 4px; }
+.all-card-body { flex: 1 1 auto; min-height: 0; display: flex; }
+.all-card-body .preview { padding: 0; flex: 1; min-height: 0; display: flex; }
+.all-card-body .preview-frame {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;       /* 铺满 body,不锁 4:3 */
+  max-height: none;
+}
+.all-card-body .preview2d { width: 100%; height: 100%; max-width: none; max-height: none; }
+.all-card-body .preview-toolbar { display: none; }  /* 小图隐藏工具条,节省空间 */
 /* Preview panel: natural height, no stretch */
 .right .preview-panel { align-self: start; }
 /* Table panel: stretch to the row, internal scroll.
@@ -1252,6 +1298,7 @@ button:has(> span > svg) {
 
 /* --- 流水线底栏 ------------------------------------------------------- */
 .pipeline-bar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.pb-tail { margin-left: auto; display: inline-flex; align-items: center; gap: 10px; }
 .pb-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint); }
 .pb-run { background: var(--arc); border: 1px solid var(--arc); color: var(--bg-void); font-family: var(--display); font-weight: 700; padding: 6px 14px; }
 .pb-run:disabled { background: var(--bg-inset); border-color: var(--line); color: var(--ink-faint); }

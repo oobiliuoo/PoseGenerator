@@ -122,4 +122,6 @@ export interface Pipeline {
   name: string;
   nodes: PipelineNode[];
   builtin?: boolean;
+  /** 绑定的 CSV 输入源文件名(文本存 IndexedDB,这里只存名用于显示/检索)。 */
+  csvFileName?: string;
 }

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Pipeline } from '../types';
-import { BackendStatus } from './BackendStatus';
 import { Icon } from './icons';
+import { PLANE_LABELS, type Plane } from './Preview2D';
 
 interface Props {
   current: Pipeline;
@@ -12,6 +12,12 @@ interface Props {
   onDelete: (name: string) => void;
   onRunAll: () => void;
   loading: boolean;
+  viewMode: 'single' | 'all';
+  onSetViewMode: (m: 'single' | 'all') => void;
+  plane: Plane;
+  onPlaneChange: (p: Plane) => void;
+  showPose: boolean;
+  onToggleShowPose: () => void;
 }
 
 export function PipelineBar(props: Props) {
@@ -56,7 +62,48 @@ export function PipelineBar(props: Props) {
       <button className="pb-run" onClick={props.onRunAll} disabled={props.loading}>
         <Icon name="play" size={14} /><span>{props.loading ? '运行中…' : '运行全部'}</span>
       </button>
-      <span style={{ marginLeft: 'auto' }}><BackendStatus /></span>
+      <span className="preset-sep" aria-hidden="true" />
+      <div className="seg" role="tablist" aria-label="投影平面">
+        {(['xy', 'xz', 'yz'] as Plane[]).map(p => (
+          <button
+            key={p}
+            role="tab"
+            aria-selected={props.plane === p}
+            className={props.plane === p ? 'seg-on' : ''}
+            onClick={() => props.onPlaneChange(p)}
+          >{PLANE_LABELS[p]}</button>
+        ))}
+      </div>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={props.showPose}
+        aria-label="显示姿态方向"
+        className={props.showPose ? 'pose-toggle on' : 'pose-toggle'}
+        onClick={props.onToggleShowPose}
+        title={props.showPose ? '隐藏姿态方向' : '显示姿态方向'}
+      >
+        <span className="pose-toggle-dot" aria-hidden="true" />
+        姿态
+      </button>
+      <span className="pb-tail">
+        <div className="seg" role="tablist" aria-label="视图模式">
+          <button
+            role="tab"
+            aria-selected={props.viewMode === 'single'}
+            className={props.viewMode === 'single' ? 'seg-on' : ''}
+            onClick={() => props.onSetViewMode('single')}
+            title="仅显示选中节点"
+          >单节点</button>
+          <button
+            role="tab"
+            aria-selected={props.viewMode === 'all'}
+            className={props.viewMode === 'all' ? 'seg-on' : ''}
+            onClick={() => props.onSetViewMode('all')}
+            title="显示全部节点投影"
+          >全部节点</button>
+        </div>
+      </span>
     </div>
   );
 }

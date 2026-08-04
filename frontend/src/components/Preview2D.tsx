@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import type { PosePoint } from '../types';
 import { eulerToVec } from '../lib/euler';
 
@@ -6,7 +6,7 @@ interface Props { points: PosePoint[]; }
 
 const W = 480, H = 360, PAD = 24, ARROW = 18;
 
-type Plane = 'xy' | 'xz' | 'yz';
+export type Plane = 'xy' | 'xz' | 'yz';
 
 interface Geom { X: number; Y: number; dx: number; dy: number; }
 
@@ -43,45 +43,17 @@ function project(points: PosePoint[], plane: Plane): Geom[] | null {
   });
 }
 
-const PLANE_LABELS: Record<Plane, string> = {
+export const PLANE_LABELS: Record<Plane, string> = {
   xy: 'XY 俯视',
   xz: 'XZ 正视',
   yz: 'YZ 侧视',
 };
 
-export function Preview2D({ points }: Props) {
-  const [plane, setPlane] = useState<Plane>('xy');
-  const [showPose, setShowPose] = useState(true);
+export function Preview2D({ points, plane, showPose }: Props & { plane: Plane; showPose: boolean }) {
   const geom = useMemo(() => project(points, plane), [points, plane]);
 
   return (
     <div className="preview">
-      <div className="preview-toolbar">
-        <div className="seg" role="tablist" aria-label="投影平面">
-          {(['xy', 'xz', 'yz'] as Plane[]).map(p => (
-            <button
-              key={p}
-              role="tab"
-              aria-selected={plane === p}
-              className={plane === p ? 'seg-on' : ''}
-              onClick={() => setPlane(p)}
-            >{PLANE_LABELS[p]}</button>
-          ))}
-        </div>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={showPose}
-          aria-label="显示姿态方向"
-          className={showPose ? 'pose-toggle on' : 'pose-toggle'}
-          onClick={() => setShowPose(v => !v)}
-          title={showPose ? '隐藏姿态方向' : '显示姿态方向'}
-        >
-          <span className="pose-toggle-dot" aria-hidden="true" />
-          姿态
-        </button>
-      </div>
-
       {!geom ? (
         <div className="preview-empty">导入 CSV 后显示预览</div>
       ) : (
