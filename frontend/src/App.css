@@ -1056,6 +1056,7 @@ button:has(> span > svg) {
   transition: border-color 0.15s;
 }
 .node-card.is-selected { border-color: var(--arc); box-shadow: 0 0 0 1px var(--arc) inset; }
+.node-card.is-dragover { border-color: var(--arc); box-shadow: 0 0 0 1px var(--arc) inset; }
 .nc-head {
   display: flex;
   align-items: center;

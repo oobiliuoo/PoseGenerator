@@ -73,6 +73,7 @@ function NumCtrl(p: {
 
 export function NodeCard({ node, output, selected, expanded, onToggleExpanded, onSelect, onParams, onRemove, onMove, onAddAfter, onCsvFile, onExport }: Props) {
   const [addMenuOpen, setAddMenuOpen] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
   const addBtnRef = useRef<HTMLButtonElement>(null);
   const def = NODE_REGISTRY[node.type];
   if (!def) return <div className="node-card">未知节点: {node.type}</div>;
@@ -88,7 +89,18 @@ export function NodeCard({ node, output, selected, expanded, onToggleExpanded, o
   };
 
   return (
-    <div className={`node-card${selected ? ' is-selected' : ''}`} onClick={onSelect}>
+    <div
+      className={`node-card${selected ? ' is-selected' : ''}${dragOver ? ' is-dragover' : ''}`}
+      onClick={onSelect}
+      onDragOver={def.isSource ? e => { e.preventDefault(); setDragOver(true); } : undefined}
+      onDragLeave={def.isSource ? e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOver(false); } : undefined}
+      onDrop={def.isSource ? e => {
+        e.preventDefault();
+        setDragOver(false);
+        const f = e.dataTransfer.files?.[0];
+        if (f) onFile(f);
+      } : undefined}
+    >
       <div className="nc-head">
         <span className="nc-dot" />
         <span className="nc-label">{def.label}</span>
@@ -132,10 +144,10 @@ export function NodeCard({ node, output, selected, expanded, onToggleExpanded, o
           {def.type === 'filter_ransac_line' && node.params.enableProjection === 1 && (
             <div className="nc-note">⚠ 启用投影会清空姿态数据(rx/ry/rz 归零)</div>
           )}
-          {/* 源节点:文件选择 */}
+          {/* 源节点:文件选择(拖放目标为整张卡片) */}
           {def.isSource && (
             <label className="nc-file">
-              <input type="file" accept=".csv,text/csv"
+              <input type="file" accept=".csv"
                 onChange={e => { const f = e.target.files?.[0]; if (f) onFile(f); e.target.value = ''; }} />
               <span>{(frame?.meta as any)?.fileName ?? '选择 CSV / 拖入'}</span>
               {(frame?.meta as any)?.hasRotation && <span className="hint"> 含姿态</span>}
