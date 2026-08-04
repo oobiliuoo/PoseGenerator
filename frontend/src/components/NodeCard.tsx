@@ -25,9 +25,11 @@ function NumCtrl(p: {
   value: number;
   allParams: Record<string, number>;
   onChange: (v: number) => void;
+  maxOverride?: number;
 }) {
-  const { spec, value, allParams, onChange } = p;
+  const { spec, value, allParams, onChange, maxOverride } = p;
   const disabled = spec.disabledWhen ? spec.disabledWhen(allParams) : false;
+  const max = maxOverride ?? spec.max;
   const set = (v: number) => {
     if (spec.forcedOdd) {
       const i = Math.max(1, Math.round(v));
@@ -38,7 +40,7 @@ function NumCtrl(p: {
   };
   if (spec.type === 'select') {
     return (
-      <div className={`ctrl compact${disabled ? ' is-disabled' : ''}`}>
+      <div className={`ctrl compact${disabled ? ' is-disabled' : ''}`} onClick={e => e.stopPropagation()}>
         <label>
           <span className="ctrl-name">
             {spec.label}
@@ -53,17 +55,17 @@ function NumCtrl(p: {
     );
   }
   return (
-    <div className={`ctrl compact${disabled ? ' is-disabled' : ''}`}>
+    <div className={`ctrl compact${disabled ? ' is-disabled' : ''}`} onClick={e => e.stopPropagation()}>
       <label>
         <span className="ctrl-name">
           {spec.label}
           {disabled && spec.disabledHint && <span className="hint">{spec.disabledHint}</span>}
         </span>
-        <input type="number" min={spec.min} max={spec.max} step={spec.step} value={value}
+        <input type="number" min={spec.min} max={max} step={spec.step} value={value}
           disabled={disabled}
           onChange={e => { const n = parseFloat(e.target.value); if (!Number.isNaN(n)) set(n); }} />
       </label>
-      <input type="range" min={spec.min} max={spec.max} step={spec.step} value={value}
+      <input type="range" min={spec.min} max={max} step={spec.step} value={value}
         disabled={disabled}
         onChange={e => set(parseFloat(e.target.value))}
         aria-label={spec.label} />
@@ -144,9 +146,12 @@ export function NodeCard({ node, output, selected, expanded, onToggleExpanded, o
           {def.type === 'filter_ransac_line' && node.params.enableProjection === 1 && (
             <div className="nc-note">⚠ 启用投影会清空姿态数据(rx/ry/rz 归零)</div>
           )}
+          {def.type === 'slice' && (frame?.meta as any)?.note && (
+            <div className="nc-note">⚠ {(frame?.meta as any).note}</div>
+          )}
           {/* 源节点:文件选择(拖放目标为整张卡片) */}
           {def.isSource && (
-            <label className="nc-file">
+            <label className="nc-file" onClick={e => e.stopPropagation()}>
               <input type="file" accept=".csv"
                 onChange={e => { const f = e.target.files?.[0]; if (f) onFile(f); e.target.value = ''; }} />
               <span>{(frame?.meta as any)?.fileName ?? '选择 CSV / 拖入'}</span>
@@ -154,11 +159,23 @@ export function NodeCard({ node, output, selected, expanded, onToggleExpanded, o
             </label>
           )}
           {/* 算法/工具节点:参数 */}
-          {def.params.map(spec => (
-            <NumCtrl key={spec.key} spec={spec} value={node.params[spec.key] ?? spec.default}
-              allParams={node.params}
-              onChange={v => onParams({ [spec.key]: v })} />
-          ))}
+          {def.params.map(spec => {
+            // slice 节点:拉环 max 按总点数动态限制,保证起点/长度不超范围
+            let maxOverride: number | undefined;
+            if (def.type === 'slice') {
+              const total = (frame?.meta as any)?.sliced?.total as number | undefined;
+              if (typeof total === 'number') {
+                const curStart = Math.min(Math.floor(node.params.start ?? 0), total);
+                maxOverride = spec.key === 'start' ? total : Math.max(0, total - curStart);
+              }
+            }
+            return (
+              <NumCtrl key={spec.key} spec={spec} value={node.params[spec.key] ?? spec.default}
+                allParams={node.params}
+                maxOverride={maxOverride}
+                onChange={v => onParams({ [spec.key]: v })} />
+            );
+          })}
           {/* 终点节点:导出按钮 */}
           {def.isSink && (
             <button className="nc-export" onClick={e => { e.stopPropagation(); onExport?.(); }}

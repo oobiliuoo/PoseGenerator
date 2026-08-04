@@ -211,6 +211,8 @@ export const NODE_REGISTRY: Record<string, NodeDef> = {
     type: 'filter_bspline',
     label: 'B样条均匀重建',
     category: 'tool',
+    role: 'tool',
+    desc: 'B样条拟合并按步长均匀重建路径',
     isSource: false, isSink: false,
     params: [
       { key: 'step', label: 'step', type: 'number', min: 0.1, max: 100, step: 0.1, default: 5.0 },
@@ -221,6 +223,38 @@ export const NODE_REGISTRY: Record<string, NodeDef> = {
     async execute(input, params, ctx) {
       if (!input) return EMPTY_FRAME;
       return ctx.executeNode('filter_bspline', input, params);
+    },
+    visualizableMeta: [],
+  },
+  slice: {
+    type: 'slice',
+    label: '数据截取',
+    category: 'tool',
+    role: 'tool',
+    desc: '按起始位置与长度截取路径片段',
+    isSource: false, isSink: false,
+    params: [
+      { key: 'start', label: 'start', type: 'number', min: 0, max: 100000, step: 1, default: 0 },
+      { key: 'length', label: 'length', type: 'number', min: 0, max: 100000, step: 1, default: 100 },
+    ],
+    async execute(input, params, _ctx) {
+      if (!input) return EMPTY_FRAME;
+      const n = input.points.length;
+      const reqStart = Math.max(0, Math.floor(params.start ?? 0));
+      const reqLength = Math.max(0, Math.floor(params.length ?? 0));
+      // 钳制到有效范围:start ∈ [0, n],length ∈ [0, n - start]
+      const start = Math.min(reqStart, n);
+      const length = Math.min(reqLength, n - start);
+      const sliced = input.points.slice(start, start + length);
+      const meta: Record<string, unknown> = {
+        ...input.meta,
+        sliced: { start, length, total: n, out: sliced.length },
+      };
+      // 参数超出总点数 → 提示实际生效范围(非报错,结果仍有效)
+      if (reqStart > n || reqLength > n - start) {
+        meta.note = `已截取 [${start}, ${start + length}) / 共 ${n} 点`;
+      }
+      return { points: sliced, meta };
     },
     visualizableMeta: [],
   },
@@ -270,6 +304,7 @@ const ICON_KEY: Record<string, string> = {
   filter_gaussian: 'wave',
   filter_savgol: 'wave',
   filter_ransac_line: 'ransac',
+  slice: 'wave-cut',
 };
 
 /** 构建添加菜单的四段分组(输入源 / 算法 / 滤波工具 / 输出)。 */
