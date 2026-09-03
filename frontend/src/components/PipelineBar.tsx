@@ -34,6 +34,7 @@ export function PipelineBar(props: Props) {
 
   return (
     <div className="pipeline-bar action-bar">
+      {/* 组1:流水线管理(左) */}
       <span className="pb-label">流水线</span>
       {builtinPipelines.map(p => (
         <button key={p.name} className={current.name === p.name ? 'seg-on' : ''} onClick={() => props.onSelect(p)}>{p.name}</button>
@@ -58,35 +59,37 @@ export function PipelineBar(props: Props) {
           <Icon name="save" size={14} /><span>保存当前</span>
         </button>
       )}
+      {/* 组2:运行(中) */}
       <span className="preset-sep" aria-hidden="true" />
       <button className="pb-run" onClick={props.onRunAll} disabled={props.loading}>
         <Icon name="play" size={14} /><span>{props.loading ? '运行中…' : '运行全部'}</span>
       </button>
-      <span className="preset-sep" aria-hidden="true" />
-      <div className="seg" role="tablist" aria-label="投影平面">
-        {(['xy', 'xz', 'yz'] as Plane[]).map(p => (
-          <button
-            key={p}
-            role="tab"
-            aria-selected={props.plane === p}
-            className={props.plane === p ? 'seg-on' : ''}
-            onClick={() => props.onPlaneChange(p)}
-          >{PLANE_LABELS[p]}</button>
-        ))}
-      </div>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={props.showPose}
-        aria-label="显示姿态方向"
-        className={props.showPose ? 'pose-toggle on' : 'pose-toggle'}
-        onClick={props.onToggleShowPose}
-        title={props.showPose ? '隐藏姿态方向' : '显示姿态方向'}
-      >
-        <span className="pose-toggle-dot" aria-hidden="true" />
-        姿态
-      </button>
+      {/* 组3:预览视图(右) — 视角 + 姿态 + 视图模式 */}
       <span className="pb-tail">
+        <div className="seg" role="tablist" aria-label="投影平面">
+          {(['xy', 'xz', 'yz'] as Plane[]).map(p => (
+            <button
+              key={p}
+              role="tab"
+              aria-selected={props.plane === p}
+              className={props.plane === p ? 'seg-on' : ''}
+              onClick={() => props.onPlaneChange(p)}
+            >{PLANE_LABELS[p]}</button>
+          ))}
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={props.showPose}
+          aria-label="显示姿态方向"
+          className={props.showPose ? 'pose-toggle on' : 'pose-toggle'}
+          onClick={props.onToggleShowPose}
+          title={props.showPose ? '隐藏姿态方向' : '显示姿态方向'}
+        >
+          <span className="pose-toggle-dot" aria-hidden="true" />
+          姿态
+        </button>
+        <span className="preset-sep" aria-hidden="true" />
         <div className="seg" role="tablist" aria-label="视图模式">
           <button
             role="tab"
