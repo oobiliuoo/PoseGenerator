@@ -72,6 +72,7 @@ export default function App() {
                 onToggleOne={toggleOne}
                 onSelect={actions.setSelectedNodeId}
                 onParams={actions.updateNodeParams}
+                onToggleEnabled={actions.toggleNodeEnabled}
                 onRemove={actions.removeNode}
                 onMove={actions.moveNode}
                 onAddNode={actions.addNode}

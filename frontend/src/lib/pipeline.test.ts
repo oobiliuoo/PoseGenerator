@@ -34,6 +34,16 @@ async function run() {
   await runPipeline(nodes, 0, ctx, {});
   assert(calls.includes('pose_generate'), 'rerun from 0 re-executes downstream');
 
+  // 屏蔽 pose_generate:不执行,输入直通输出,meta 带 bypassed
+  calls.length = 0;
+  const bypassedNodes = nodes.map(n => n.id === pose.id ? { ...n, enabled: false } : n);
+  const out2 = await runPipeline(bypassedNodes, 0, ctx, {});
+  assert(!calls.includes('pose_generate'), 'bypassed node is not executed');
+  const poseOut2 = getOutput(out2, pose.id);
+  assert(poseOut2 && poseOut2.points.length === 3, 'bypassed node passes input through');
+  assert((poseOut2!.meta as any).bypassed === true, 'bypassed output marked');
+  assert((poseOut2!.meta as any).via === undefined, 'bypassed output has no backend marker');
+
   console.log('pipeline.test OK');
 }
 run();

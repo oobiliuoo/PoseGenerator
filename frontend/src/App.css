@@ -1138,6 +1138,11 @@ button:has(> span > svg) {
 .nc-actions button:hover { color: var(--arc); border-color: var(--line); background: var(--bg-inset); }
 .nc-actions button:focus-visible { outline: 2px solid var(--arc); outline-offset: 1px; }
 .nc-actions button.nc-danger:hover { color: var(--danger); border-color: var(--danger); background: rgba(255, 80, 80, 0.06); }
+/* 屏蔽按钮激活态 + 被屏蔽卡片整体降调 */
+.nc-actions button.nc-bypass.on { color: var(--danger); border-color: var(--danger); background: rgba(255, 80, 80, 0.06); }
+.node-card.is-bypassed { opacity: 0.55; }
+.node-card.is-bypassed .nc-head { border-style: dashed; }
+.nc-status.nc-bypassed { color: var(--ink-faint); font-style: italic; }
 .nc-body {
   padding: 10px 11px 11px;
   display: flex;

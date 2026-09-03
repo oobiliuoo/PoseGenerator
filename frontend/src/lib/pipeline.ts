@@ -32,6 +32,15 @@ export async function runPipeline(
       input = EMPTY_FRAME;
       continue;
     }
+    // 屏蔽节点:不执行,输入直通输出(源节点屏蔽视为空帧)
+    if (node.enabled === false) {
+      const bypassed: PoseFrame = def.isSource
+        ? { ...EMPTY_FRAME, meta: { bypassed: true } }
+        : { ...(input ?? EMPTY_FRAME), meta: { ...(input?.meta ?? {}), bypassed: true } };
+      out[node.id] = bypassed;
+      input = bypassed;
+      continue;
+    }
     // 源节点 input=null;否则用上一个成功输出
     const nodeInput = def.isSource ? null : input;
     try {

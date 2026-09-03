@@ -115,6 +115,7 @@ export interface PipelineNode {
   id: string;                       // 实例唯一 id(同一类型可多次出现)
   type: string;                     // 指向 NODE_REGISTRY 的 key
   params: Record<string, number>;   // 按 NodeParamSpec.key 存值
+  enabled?: boolean;                // false=屏蔽(输入直通输出,不执行);缺省启用
 }
 
 /** 一条流水线定义。 */

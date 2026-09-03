@@ -63,6 +63,19 @@ export function usePipeline() {
     });
   }, [run]);
 
+  // 屏蔽/恢复节点:不执行该节点,输入直通输出。从该节点起重算。
+  const toggleNodeEnabled = useCallback((nodeId: string) => {
+    setPipeline(prev => {
+      const idx = prev.nodes.findIndex(n => n.id === nodeId);
+      if (idx < 0) return prev;
+      const nodes = prev.nodes.map((n, i) =>
+        i === idx ? { ...n, enabled: n.enabled === false } : n
+      );
+      run(nodes, idx);
+      return { ...prev, nodes };
+    });
+  }, [run]);
+
   // CSV 文件载入:存 React state + ref,触发 csv_input 重算(及下游)
   const loadCsv = useCallback((name: string, text: string) => {
     csvFileRef.current = { name, text };
@@ -193,6 +206,7 @@ export function usePipeline() {
     actions: {
       setSelectedNodeId,
       updateNodeParams,
+      toggleNodeEnabled,
       loadCsv,
       addNode,
       removeNode,

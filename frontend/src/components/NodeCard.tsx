@@ -13,6 +13,7 @@ interface Props {
   onToggleExpanded: () => void;
   onSelect: () => void;
   onParams: (patch: Record<string, number>) => void;
+  onToggleEnabled: () => void;
   onRemove: () => void;
   onMove: (dir: -1 | 1) => void;
   onAddAfter: (type: string) => void;
@@ -90,7 +91,7 @@ function NumCtrl(p: {
   );
 }
 
-export function NodeCard({ node, output, selected, expanded, onToggleExpanded, onSelect, onParams, onRemove, onMove, onAddAfter, onCsvFile, onExport }: Props) {
+export function NodeCard({ node, output, selected, expanded, onToggleExpanded, onSelect, onParams, onToggleEnabled, onRemove, onMove, onAddAfter, onCsvFile, onExport }: Props) {
   const [addMenuOpen, setAddMenuOpen] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const addBtnRef = useRef<HTMLButtonElement>(null);
@@ -100,6 +101,7 @@ export function NodeCard({ node, output, selected, expanded, onToggleExpanded, o
   const frame: PoseFrame | null = output && !('error' in output) ? output : null;
   const err: string | null = output && 'error' in output ? output.error : null;
   const outCount = frame?.points.length ?? 0;
+  const disabledNode = node.enabled === false;
 
   const onFile = (f: File) => {
     const reader = new FileReader();
@@ -109,7 +111,7 @@ export function NodeCard({ node, output, selected, expanded, onToggleExpanded, o
 
   return (
     <div
-      className={`node-card${selected ? ' is-selected' : ''}${dragOver ? ' is-dragover' : ''}`}
+      className={`node-card${selected ? ' is-selected' : ''}${dragOver ? ' is-dragover' : ''}${disabledNode ? ' is-bypassed' : ''}`}
       onClick={onSelect}
       onDragOver={def.isSource ? e => { e.preventDefault(); setDragOver(true); } : undefined}
       onDragLeave={def.isSource ? e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOver(false); } : undefined}
@@ -124,6 +126,15 @@ export function NodeCard({ node, output, selected, expanded, onToggleExpanded, o
         <span className="nc-dot" />
         <span className="nc-label">{def.label}</span>
         <span className="nc-actions" onClick={e => e.stopPropagation()}>
+          {!def.isSource && (
+            <button
+              onClick={onToggleEnabled}
+              title={disabledNode ? '恢复该节点处理' : '屏蔽该节点(输入直通输出)'}
+              aria-label={disabledNode ? '恢复该节点处理' : '屏蔽该节点'}
+              aria-pressed={disabledNode}
+              className={disabledNode ? 'nc-bypass on' : 'nc-bypass'}
+            >⊘</button>
+          )}
           <button onClick={() => onMove(-1)} title="上移" aria-label="上移">↑</button>
           <button onClick={() => onMove(1)} title="下移" aria-label="下移">↓</button>
           <button onClick={onRemove} title="删除" aria-label="删除" className="nc-danger">×</button>
@@ -155,7 +166,9 @@ export function NodeCard({ node, output, selected, expanded, onToggleExpanded, o
             <span className="nc-cat">{def.category}</span>
             {err
               ? <span className="nc-status nc-err">{err}</span>
-              : <span className="nc-status">{outCount} pts</span>}
+              : disabledNode
+                ? <span className="nc-status nc-bypassed">已屏蔽 · 直通 {outCount} pts</span>
+                : <span className="nc-status">{outCount} pts</span>}
           </div>
           {def.type === 'filter_ransac_line' && (
             <div className="nc-note">⚠ RANSAC 结果有随机性,重算可能变化</div>

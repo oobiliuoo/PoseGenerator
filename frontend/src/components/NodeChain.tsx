@@ -12,6 +12,7 @@ interface Props {
   onToggleOne: (id: string) => void;
   onSelect: (id: string) => void;
   onParams: (id: string, patch: Record<string, number>) => void;
+  onToggleEnabled: (id: string) => void;
   onRemove: (id: string) => void;
   onMove: (id: string, dir: -1 | 1) => void;
   onAddNode: (type: string, afterId?: string) => void;
@@ -39,6 +40,7 @@ export function NodeChain(props: Props) {
             onToggleExpanded={() => onToggleOne(n.id)}
             onSelect={() => props.onSelect(n.id)}
             onParams={patch => props.onParams(n.id, patch)}
+            onToggleEnabled={() => props.onToggleEnabled(n.id)}
             onRemove={() => props.onRemove(n.id)}
             onMove={dir => props.onMove(n.id, dir)}
             onAddAfter={type => props.onAddNode(type, n.id)}
