@@ -38,6 +38,20 @@ function NumCtrl(p: {
       onChange(v);
     }
   };
+  // number 输入的字符串草稿:允许中间态(空/负号/尾小数点),blur/Enter 才提交。
+  // 受控 value + parseFloat NaN 守卫会把 "-"、"1." 判为 NaN 拒绝更新,负数输不进去。
+  const [draft, setDraft] = useState<string | null>(null);
+  const commitDraft = () => {
+    if (draft === null) return;
+    const n = parseFloat(draft);
+    setDraft(null);  // 退出编辑态,回显外部 value
+    if (!Number.isNaN(n)) {
+      // 提交时钳制到 [min, max],避免越界值进流水线
+      const lo = spec.min ?? -Infinity;
+      const hi = max ?? Infinity;
+      set(Math.min(hi, Math.max(lo, n)));
+    }
+  };
   if (spec.type === 'select') {
     return (
       <div className={`ctrl compact${disabled ? ' is-disabled' : ''}`} onClick={e => e.stopPropagation()}>
@@ -61,9 +75,12 @@ function NumCtrl(p: {
           {spec.label}
           {disabled && spec.disabledHint && <span className="hint">{spec.disabledHint}</span>}
         </span>
-        <input type="number" min={spec.min} max={max} step={spec.step} value={value}
+        <input type="number" min={spec.min} max={max} step={spec.step}
+          value={draft ?? String(value)}
           disabled={disabled}
-          onChange={e => { const n = parseFloat(e.target.value); if (!Number.isNaN(n)) set(n); }} />
+          onChange={e => setDraft(e.target.value)}
+          onBlur={commitDraft}
+          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); commitDraft(); } }} />
       </label>
       <input type="range" min={spec.min} max={max} step={spec.step} value={value}
         disabled={disabled}
