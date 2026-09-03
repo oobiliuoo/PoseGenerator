@@ -18,6 +18,15 @@ bool parseGenerateRequest(const nlohmann::json& j, GenerateRequest& out) {
             static_cast<float>(ip.value("ry", 0.0)),
             static_cast<float>(ip.value("rz", 0.0))
         );
+        // 初始切线(可选):(0,0,0)=起点切线方向=初始姿态切线方向,不做对齐旋转
+        if (j.contains("initial_tangent")) {
+            const auto& it = j.at("initial_tangent");
+            out.initial_tangent = cv::Point3f(
+                static_cast<float>(it.value("tx", 0.0)),
+                static_cast<float>(it.value("ty", 0.0)),
+                static_cast<float>(it.value("tz", 0.0))
+            );
+        }
         // Build Params field-by-field using the same defaults and int-cast the
         // library's fromJson uses, to stay consistent with library semantics
         // without coupling to nexus's internal Json type.
@@ -56,6 +65,6 @@ GenerateResponse runGenerate(const GenerateRequest& req) {
     mws::CorrugatedWeldPoseGenerator generator;
     generator.setParams(req.params);
     GenerateResponse resp;
-    resp.result = generator.generate(req.points, req.initial_pose);
+    resp.result = generator.generate(req.points, req.initial_pose, req.initial_tangent);
     return resp;
 }

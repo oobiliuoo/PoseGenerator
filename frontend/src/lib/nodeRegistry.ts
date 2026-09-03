@@ -16,12 +16,16 @@ const POSE_GEN_PARAMS: NodeParamSpec[] = [
   { key: 'init_rx', label: 'init_rx', type: 'number', min: -180, max: 180, step: 0.5, default: DEFAULT_INITIAL_POSE.rx },
   { key: 'init_ry', label: 'init_ry', type: 'number', min: -180, max: 180, step: 0.5, default: DEFAULT_INITIAL_POSE.ry },
   { key: 'init_rz', label: 'init_rz', type: 'number', min: -180, max: 180, step: 0.5, default: DEFAULT_INITIAL_POSE.rz },
+  // 初始切线方向 tx/ty/tz(可选,全 0=起点切线方向=初始姿态切线方向,不做对齐旋转)
+  { key: 'init_tx', label: 'init_tx', type: 'number', min: -1000, max: 1000, step: 1, default: 0 },
+  { key: 'init_ty', label: 'init_ty', type: 'number', min: -1000, max: 1000, step: 1, default: 0 },
+  { key: 'init_tz', label: 'init_tz', type: 'number', min: -1000, max: 1000, step: 1, default: 0 },
 ];
 
-// 把节点的扁平 params 转成后端期望的 {算法参数..., initial_pose:{rx,ry,rz}}
+// 把节点的扁平 params 转成后端期望的 {算法参数..., initial_pose:{rx,ry,rz}, initial_tangent:{tx,ty,tz}}
 function packPoseGenParams(p: Record<string, number>): Record<string, any> {
-  const { init_rx, init_ry, init_rz, ...algo } = p;
-  return { ...algo, initial_pose: { rx: init_rx, ry: init_ry, rz: init_rz } };
+  const { init_rx, init_ry, init_rz, init_tx, init_ty, init_tz, ...algo } = p;
+  return { ...algo, initial_pose: { rx: init_rx, ry: init_ry, rz: init_rz }, initial_tangent: { tx: init_tx, ty: init_ty, tz: init_tz } };
 }
 
 export const NODE_REGISTRY: Record<string, NodeDef> = {

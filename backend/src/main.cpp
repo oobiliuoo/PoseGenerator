@@ -89,8 +89,10 @@ int main() {
         genReq["points"] = body.value("input", nlohmann::json::object()).value("points", nlohmann::json::array());
         nlohmann::json params = body.value("params", nlohmann::json::object());
         genReq["initial_pose"] = params.value("initial_pose", nlohmann::json::object());
+        genReq["initial_tangent"] = params.value("initial_tangent", nlohmann::json::object());
         nlohmann::json paramsWithoutInit = params;
         paramsWithoutInit.erase("initial_pose");
+        paramsWithoutInit.erase("initial_tangent");
         genReq["params"] = paramsWithoutInit;
 
         GenerateRequest gr;

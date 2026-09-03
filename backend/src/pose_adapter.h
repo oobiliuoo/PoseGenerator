@@ -7,6 +7,7 @@
 struct GenerateRequest {
     std::vector<sa::RobotPointEx> points;
     cv::Point3f initial_pose{0, 0, 0};
+    cv::Point3f initial_tangent{0, 0, 0};
     mws::CorrugatedWeldPoseGenerator::Params params;
 };
 
