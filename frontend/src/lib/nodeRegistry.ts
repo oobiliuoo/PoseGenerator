@@ -213,16 +213,17 @@ export const NODE_REGISTRY: Record<string, NodeDef> = {
   },
   filter_bspline: {
     type: 'filter_bspline',
-    label: 'B样条均匀重建',
+    label: 'B样条重建',
     category: 'tool',
     role: 'tool',
-    desc: 'B样条拟合并按步长均匀重建路径',
+    desc: 'B样条拟合重建:均匀重采样或逐点投影',
     isSource: false, isSink: false,
     params: [
-      { key: 'step', label: 'step', type: 'number', min: 0.1, max: 100, step: 0.1, default: 5.0 },
+      { key: 'uniform', label: 'uniform', type: 'select', default: 1, options: [{ value: 1, label: '均匀重采样' }, { value: 0, label: '逐点投影' }] },
+      { key: 'step', label: 'step', type: 'number', min: 0.1, max: 100, step: 0.1, default: 1.0 },
       { key: 'Tol3D', label: 'Tol3D', type: 'number', min: 0.1, max: 20, step: 0.1, default: 3.0 },
       { key: 'degMin', label: 'degMin', type: 'number', min: 1, max: 8, step: 1, default: 3 },
-      { key: 'continuity', label: 'continuity', type: 'number', min: 0, max: 2, step: 1, default: 2 },
+      { key: 'continuity', label: 'continuity', type: 'number', min: 0, max: 2, step: 1, default: 1 },
     ],
     async execute(input, params, ctx) {
       if (!input) return EMPTY_FRAME;

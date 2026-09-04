@@ -16,7 +16,7 @@ description: 把 nexus / MultimodalWeldSystem 库的具体算法（filter、pose
 读算法头文件（`${NEXUS_ROOT}/MultimodalWeldSystem/include/...`），核对：
 
 - **纯函数式 apply？** `T apply(const T& input)` 输入输出同型（如 `PointList→PointList`）= 可适配。若有副作用（写文件/网络/全局状态）、依赖外部配置文件、非确定随机——仍可适配但要标注（见第 5 步）。
-- **非 filter 自由函数也算可适配**：`core/MWS_Function.h` 里 `mws::` 自由函数（不继承 filter 接口，如 `fitBsPLineAndRebuildPathUniform`）只要"点序列进、点序列出"也可塞 filter_adapter——node_type 蹭 `filter_` 前缀走分发，adapter 直接调自由函数（不构造 filter 对象）。详见 [references/nexus-conventions.md](references/nexus-conventions.md) "非 filter 自由函数"节。注意自由函数常返回 int 错误码，adapter 要检查非 0 抛错。
+- **非 filter 自由函数也算可适配**：`core/MWS_Function.h` 里 `mws::` 自由函数（不继承 filter 接口，如 `alignSegment_TrimmedICP_*`）只要"点序列进、点序列出"也可塞 filter_adapter——node_type 蹭 `filter_` 前缀走分发，adapter 直接调自由函数（不构造 filter 对象）。详见 [references/nexus-conventions.md](references/nexus-conventions.md) "非 filter 自由函数"节。注意自由函数常返回 int 错误码，adapter 要检查非 0 抛错。**优先看有没有同名 filter 子类**（如 B 样条曾有自由函数版本、后有 `BSplineFilter` 类——filter 类封装更完整：透传兜底、参数默认值权威），有则走 filter 类。
 - **姿态字段怎么处理？** grep 算法源码是否碰 `rx/ry/rz`。多数不碰→姿态搭便车透传（adapter 用 `toRot()` 原样返回，不清零）。若算法改位置不改姿态（平滑类、B样条重建类）→ 位置/姿态脱钩，UI 不警告（用户自负责）。若算法清零姿态（如 RansacLine 投影）→ UI 必须警告。
 - **容器型/单点型？** 如 `CascadeRbtPathFilter`（内部串多 filter + 单点 accept）= 容器型，与流水线节点链语义重复，**排除**，不做节点。
 

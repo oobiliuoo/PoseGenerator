@@ -8,6 +8,7 @@ using std::max;
 #include "filter/MWS_SavitzkyGolayFilter.h"
 #include "filter/MWS_StatisticalOutlierFilter.h"
 #include "filter/MWS_RansacLineFilter.h"
+#include "filter/MWS_BSplineFilter.h"
 #include "core/MWS_Function.h"
 #include <stdexcept>
 
@@ -107,18 +108,16 @@ FilterResponse runFilter(const FilterRequest& req) {
         return resp;
     }
     if (req.node_type == "filter_bspline") {
-        // 自由函数(非 filter 子类),B 样条拟合 + 弧长均匀重建。
-        // 姿态搭便车:算法 setPos 只改位置,rx/ry/rz 原样保留(adapter toRot 透传)。
-        float step = static_cast<float>(p.count("step") ? p.at("step") : 5.0);
+        // BSplineFilter(filter 子类):B 样条拟合重建。
+        // uniform=true 弧长均匀重采样(输出≈长/step);false 逐点投影(输出=输入,保留姿态/外部轴)。
+        // 库内失败/点数<3 原样透传(adapter 不再抛错,与库行为一致)。
+        bool uniform = p.count("uniform") ? (p.at("uniform") != 0) : true;
+        float step = static_cast<float>(p.count("step") ? p.at("step") : 1.0);
         float tol3d = static_cast<float>(p.count("Tol3D") ? p.at("Tol3D") : 3.0);
         int degMin = static_cast<int>(p.count("degMin") ? p.at("degMin") : 3);
-        int cont = static_cast<int>(p.count("continuity") ? p.at("continuity") : 2);
-        sa::PointList out;
-        int rc = mws::fitBsPLineAndRebuildPathUniform(req.points, out, step, tol3d, degMin, cont);
-        if (rc != 0) {
-            throw std::runtime_error("fitBsPLine failed, code=" + std::to_string(rc));
-        }
-        resp.result = out;
+        int cont = static_cast<int>(p.count("continuity") ? p.at("continuity") : 1);
+        mws::BSplineFilter f(uniform, step, tol3d, degMin, cont);
+        resp.result = f.apply(req.points);
         return resp;
     }
     throw std::runtime_error("unknown filter node_type: " + req.node_type);
