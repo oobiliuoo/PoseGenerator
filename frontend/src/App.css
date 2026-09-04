@@ -1303,10 +1303,41 @@ button:has(> span > svg) {
 
 /* --- 流水线底栏 ------------------------------------------------------- */
 .pipeline-bar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+/* 流水线列表横向滚动:单行不换行,滚轮横移,滚动条隐藏 */
+.pb-scroll {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 40vw;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 2px;
+  scrollbar-width: none;               /* Firefox */
+}
+.pb-scroll::-webkit-scrollbar { display: none; }  /* Chrome/Edge */
+.pb-scroll button { white-space: nowrap; }        /* 名字不折行,始终单排 */
+/* 选中流水线高亮:琥珀底 + 同色描边,hover 不褪色 */
+.pb-scroll button.seg-on,
+.pb-scroll button.seg-on:hover:not(:disabled) {
+  background: var(--arc);
+  border-color: var(--arc);
+  color: var(--bg-void);
+  font-weight: 600;
+}
 .pb-tail { margin-left: auto; display: inline-flex; align-items: center; gap: 10px; }
 .pb-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint); }
 .pb-run { background: var(--arc); border: 1px solid var(--arc); color: var(--bg-void); font-family: var(--display); font-weight: 700; padding: 6px 14px; }
-.pb-run:disabled { background: var(--bg-inset); border-color: var(--line); color: var(--ink-faint); }
+/* 运行中:危险红底 + 呼吸动画,提示正在执行可中止感知 */
+.pb-run:disabled {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: var(--bg-void);
+  animation: pb-run-pulse 1.2s ease-in-out infinite;
+}
+@keyframes pb-run-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
 .layout { grid-template-columns: 420px minmax(0, 1fr); }
 
 .nc-note { font-family: var(--mono); font-size: 10px; color: var(--arc); padding: 4px 6px; background: rgba(255, 182, 39, 0.08); border-left: 2px solid var(--arc); border-radius: 2px; }

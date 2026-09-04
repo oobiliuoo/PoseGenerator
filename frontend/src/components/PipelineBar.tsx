@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Pipeline } from '../types';
 import { Icon } from './icons';
 import { PLANE_LABELS, type Plane } from './Preview2D';
@@ -27,6 +27,21 @@ export function PipelineBar(props: Props) {
   const [naming, setNaming] = useState(false);
   const [draft, setDraft] = useState('');
   const importFileRef = useRef<HTMLInputElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // 竖向滚轮映射为横向滚动:React onWheel 是 passive 的,preventDefault 需原生监听
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      if (e.deltaY !== 0 && el.scrollWidth > el.clientWidth) {
+        e.preventDefault();
+        el.scrollLeft += e.deltaY;
+      }
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, []);
 
   const onImportFile = async (f: File) => {
     try {
@@ -48,18 +63,17 @@ export function PipelineBar(props: Props) {
 
   return (
     <div className="pipeline-bar action-bar">
-      {/* 组1:流水线管理(左) */}
+      {/* 组1:流水线管理(左) — 列表横向滚动,滚轮映射为横向 */}
       <span className="pb-label">流水线</span>
-      {builtinPipelines.map(p => (
-        <button key={p.name} className={current.name === p.name ? 'seg-on' : ''} onClick={() => props.onSelect(p)}>{p.name}</button>
-      ))}
-      {customPipelines.length > 0 && <span className="preset-sep" aria-hidden="true" />}
-      {customPipelines.map(p => (
-        <span key={p.name} className="preset-item">
-          <button className={current.name === p.name ? 'seg-on' : ''} onClick={() => props.onSelect(p)}>{p.name}</button>
-          <button className="del" onClick={() => props.onDelete(p.name)} aria-label={`删除 ${p.name}`}>×</button>
-        </span>
-      ))}
+      <div ref={scrollRef} className="pb-scroll">
+        {builtinPipelines.map(p => (
+          <button key={p.name} className={current.name === p.name ? 'seg-on' : ''} onClick={() => props.onSelect(p)}>{p.name}</button>
+        ))}
+        {customPipelines.length > 0 && <span className="preset-sep" aria-hidden="true" />}
+        {customPipelines.map(p => (
+          <button key={p.name} className={current.name === p.name ? 'seg-on' : ''} onClick={() => props.onSelect(p)}>{p.name}</button>
+        ))}
+      </div>
       {naming ? (
         <span className="preset-name-input">
           <input value={draft} onChange={e => setDraft(e.target.value)}
@@ -78,6 +92,13 @@ export function PipelineBar(props: Props) {
       </button>
       <button onClick={() => importFileRef.current?.click()} title="从序列化文件快速构建节点链">
         <span>导入</span>
+      </button>
+      <button
+        onClick={() => props.onDelete(current.name)}
+        disabled={!customPipelines.some(p => p.name === current.name)}
+        title={customPipelines.some(p => p.name === current.name) ? `删除流水线 ${current.name}` : '内置流水线不可删除'}
+      >
+        <span>删除</span>
       </button>
       <input ref={importFileRef} type="file" accept=".json,application/json"
         style={{ display: 'none' }}
