@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { Pipeline } from '../types';
 import { Icon } from './icons';
 import { PLANE_LABELS, type Plane } from './Preview2D';
+import { downloadPipelineJson, readPipelineJson, decodePipeline } from '../lib/pipelineCodec';
 
 interface Props {
   current: Pipeline;
@@ -18,12 +19,25 @@ interface Props {
   onPlaneChange: (p: Plane) => void;
   showPose: boolean;
   onToggleShowPose: () => void;
+  onImportNodes: (nodes: Pipeline['nodes']) => void;
 }
 
 export function PipelineBar(props: Props) {
   const { current, builtinPipelines, customPipelines } = props;
   const [naming, setNaming] = useState(false);
   const [draft, setDraft] = useState('');
+  const importFileRef = useRef<HTMLInputElement>(null);
+
+  const onImportFile = async (f: File) => {
+    try {
+      const text = await readPipelineJson(f);
+      const nodes = decodePipeline(JSON.parse(text));
+      if (nodes.length === 0) return;
+      props.onImportNodes(nodes);
+    } catch {
+      // 文件损坏/格式不对:静默忽略(浏览器 file input 无法弹自定义错误)
+    }
+  };
 
   const save = () => {
     const name = draft.trim();
@@ -59,6 +73,15 @@ export function PipelineBar(props: Props) {
           <Icon name="save" size={14} /><span>保存当前</span>
         </button>
       )}
+      <button onClick={() => downloadPipelineJson(current)} title="导出为 MWS_PathFilterAndPoseGenerator 序列化文件">
+        <span>导出</span>
+      </button>
+      <button onClick={() => importFileRef.current?.click()} title="从序列化文件快速构建节点链">
+        <span>导入</span>
+      </button>
+      <input ref={importFileRef} type="file" accept=".json,application/json"
+        style={{ display: 'none' }}
+        onChange={e => { const f = e.target.files?.[0]; if (f) onImportFile(f); e.target.value = ''; }} />
       {/* 组2:运行(中) */}
       <span className="preset-sep" aria-hidden="true" />
       <button className="pb-run" onClick={props.onRunAll} disabled={props.loading}>

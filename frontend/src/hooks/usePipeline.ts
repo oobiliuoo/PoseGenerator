@@ -184,6 +184,16 @@ export function usePipeline() {
     setCustomPipelines(list);
   }, []);
 
+  // 导入序列化文件构建的节点链:替换当前链(CSV 需用户重新选,导入链不带文件内容)
+  const importPipelineNodes = useCallback((nodes: Pipeline['nodes']) => {
+    const p: Pipeline = { name: pipeline.name, nodes };
+    setPipeline(p);
+    setOutputs({});
+    outputsRef.current = {};
+    setSelectedNodeId(nodes[nodes.length - 1]?.id ?? null);
+    run(nodes, 0, true);
+  }, [pipeline.name, run]);
+
   const selectedOutput: PoseFrame | null = selectedNodeId ? getOutput(outputs, selectedNodeId) : null;
 
   // pathview 显式推送:读 sink 节点的输入帧并发送。
@@ -215,6 +225,7 @@ export function usePipeline() {
       selectPipeline,
       saveCurrentAs,
       removePipeline,
+      importPipelineNodes,
       exportToPathview,
     },
   };

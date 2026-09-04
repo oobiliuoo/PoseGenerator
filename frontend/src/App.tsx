@@ -104,6 +104,7 @@ export default function App() {
         onSelect={actions.selectPipeline}
         onSave={actions.saveCurrentAs}
         onDelete={actions.removePipeline}
+        onImportNodes={actions.importPipelineNodes}
         onRunAll={actions.runAll}
         loading={loading}
         viewMode={viewMode}
