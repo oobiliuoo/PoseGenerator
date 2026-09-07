@@ -1212,7 +1212,14 @@ button:has(> span > svg) {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  scrollbar-width: thin;               /* Firefox */
+  scrollbar-color: var(--ink-faint) var(--bg-void);
 }
+/* 菜单滚动条:深色轨道 + 灰 thumb(默认白底刺眼) */
+.anm-menu::-webkit-scrollbar { width: 8px; }
+.anm-menu::-webkit-scrollbar-track { background: var(--bg-void); }
+.anm-menu::-webkit-scrollbar-thumb { background: var(--ink-faint); border-radius: 4px; }
+.anm-menu::-webkit-scrollbar-thumb:hover { background: var(--ink-dim); }
 .anm-group { display: flex; flex-direction: column; gap: 1px; }
 .anm-group:not(:first-child) { border-top: 1px solid var(--line-soft); margin-top: 4px; padding-top: 4px; }
 .anm-group-label {
@@ -1341,5 +1348,21 @@ button:has(> span > svg) {
 .layout { grid-template-columns: 420px minmax(0, 1fr); }
 
 .nc-note { font-family: var(--mono); font-size: 10px; color: var(--arc); padding: 4px 6px; background: rgba(255, 182, 39, 0.08); border-left: 2px solid var(--arc); border-radius: 2px; }
+/* 路径分段节点:段号 chip 条,点选即输出该段;直线灰/曲线青,选中琥珀 */
+.nc-seg-summary { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin: 6px 0; }
+.seg-chip {
+  min-width: 26px;
+  padding: 3px 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--bg-inset);
+  color: var(--ink-dim);
+}
+.seg-chip:hover { border-color: var(--line-bright); color: var(--ink); }
+.seg-chip.curve { color: var(--data); border-color: rgba(34, 211, 238, 0.4); }
+.seg-chip.on, .seg-chip.on:hover { background: var(--arc); border-color: var(--arc); color: var(--bg-void); font-weight: 600; }
+.seg-chip.all { margin-left: auto; }
 /* 位姿数据流标题栏的 CSV 导出按钮(复用 link 风格,推到右侧) */
 .nc-export-csv { margin-left: auto; font-size: 11px; }
