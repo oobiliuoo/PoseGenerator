@@ -179,6 +179,23 @@ export function NodeCard({ node, output, selected, expanded, onToggleExpanded, o
           {def.type === 'slice' && (frame?.meta as any)?.note && (
             <div className="nc-note">⚠ {(frame?.meta as any).note}</div>
           )}
+          {def.type === 'filter_path_segmentor' && (frame?.meta as any)?.segments && (
+            <div className="nc-seg-summary">
+              {((frame!.meta as any).segments as { start: number; end: number; type: string }[])
+                .map((s, i) => (
+                  <button key={i}
+                    className={`seg-chip${s.type === 'curve' ? ' curve' : ''}${node.params.output_segment === i ? ' on' : ''}`}
+                    onClick={e => { e.stopPropagation(); onParams({ output_segment: i }); }}
+                    title={`段${i}: [${s.start}, ${s.end}] ${s.type === 'curve' ? '曲线' : '直线'}`}
+                  >{i}</button>
+                ))}
+              <button
+                className={`seg-chip all${node.params.output_segment === -1 ? ' on' : ''}`}
+                onClick={e => { e.stopPropagation(); onParams({ output_segment: -1 }); }}
+                title="输出全部路径"
+              >全</button>
+            </div>
+          )}
           {/* 源节点:文件选择(拖放目标为整张卡片) */}
           {def.isSource && (
             <label className="nc-file" onClick={e => e.stopPropagation()}>
@@ -198,6 +215,11 @@ export function NodeCard({ node, output, selected, expanded, onToggleExpanded, o
                 const curStart = Math.min(Math.floor(node.params.start ?? 0), total);
                 maxOverride = spec.key === 'start' ? total : Math.max(0, total - curStart);
               }
+            }
+            // path_segmentor:output_segment 拉环 max 随实际段数动态扩展(-1=全路径常驻)
+            if (def.type === 'filter_path_segmentor' && spec.key === 'output_segment') {
+              const segs = (frame?.meta as any)?.segments;
+              if (Array.isArray(segs)) maxOverride = Math.max(0, segs.length - 1);
             }
             return (
               <NumCtrl key={spec.key} spec={spec} value={node.params[spec.key] ?? spec.default}

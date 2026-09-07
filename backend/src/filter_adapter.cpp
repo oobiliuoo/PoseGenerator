@@ -9,6 +9,7 @@ using std::max;
 #include "filter/MWS_StatisticalOutlierFilter.h"
 #include "filter/MWS_RansacLineFilter.h"
 #include "filter/MWS_BSplineFilter.h"
+#include "tool/PathSegmentor.h"
 #include "core/MWS_Function.h"
 #include <stdexcept>
 
@@ -51,7 +52,7 @@ nlohmann::json serializeFilterResponse(const FilterResponse& resp) {
             {"rx", rot.x}, {"ry", rot.y}, {"rz", rot.z},
         });
     }
-    return {{"points", arr}, {"meta", nlohmann::json::object()}};
+    return {{"points", arr}, {"meta", resp.meta}};
 }
 
 FilterResponse runFilter(const FilterRequest& req) {
@@ -118,6 +119,49 @@ FilterResponse runFilter(const FilterRequest& req) {
         int cont = static_cast<int>(p.count("continuity") ? p.at("continuity") : 1);
         mws::BSplineFilter f(uniform, step, tol3d, degMin, cont);
         resp.result = f.apply(req.points);
+        return resp;
+    }
+    if (req.node_type == "filter_path_segmentor") {
+        // PathSegmentor(分析器):输入仅位置,点序列原样透传,分段结果进 meta。
+        // output_segment: -1=全路径;0..段数-1=仅输出该段(闭区间 [start,end])。
+        mws::PathSegmentor::Params sp;
+        sp.curvature_threshold = p.count("curvature_threshold") ? p.at("curvature_threshold") : 0.07;
+        sp.smooth_half_width = static_cast<int>(p.count("smooth_half_width") ? p.at("smooth_half_width") : 2);
+        sp.tangent_smooth_window = static_cast<int>(p.count("tangent_smooth_window") ? p.at("tangent_smooth_window") : 5);
+        sp.min_corner_region_length = static_cast<int>(p.count("min_corner_region_length") ? p.at("min_corner_region_length") : 2);
+        sp.straight_curvature_threshold = p.count("straight_curvature_threshold") ? p.at("straight_curvature_threshold") : 0.01;
+        sp.curve_ratio_threshold = p.count("curve_ratio_threshold") ? p.at("curve_ratio_threshold") : 0.05;
+        mws::PathSegmentor seg;
+        seg.setParams(sp);
+        std::vector<cv::Point3f> positions;
+        positions.reserve(req.points.size());
+        for (const auto& pt : req.points) positions.push_back(pt.toPos());
+        mws::PathSegmentor::Result r = seg.segment(positions);
+
+        nlohmann::json segs = nlohmann::json::array();
+        for (const auto& s : r.segments) {
+            segs.push_back({
+                {"start", s.start}, {"end", s.end},
+                {"type", s.type == mws::PathSegmentor::Type::CURVE ? "curve" : "line"},
+            });
+        }
+        resp.meta = {
+            {"segments", segs},
+            {"is_closed", r.is_closed},
+            {"transition_ratio", r.transition_ratio},
+        };
+
+        int sel = static_cast<int>(p.count("output_segment") ? p.at("output_segment") : -1);
+        if (sel >= 0 && sel < static_cast<int>(r.segments.size())) {
+            const auto& s = r.segments[sel];
+            sa::PointList out;
+            for (int i = s.start; i <= s.end && i < static_cast<int>(req.points.size()); ++i) {
+                out.push_back(req.points[i]);
+            }
+            resp.result = std::move(out);
+        } else {
+            resp.result = req.points;  // 全路径透传(姿态搭便车)
+        }
         return resp;
     }
     throw std::runtime_error("unknown filter node_type: " + req.node_type);

@@ -56,6 +56,27 @@ int main() {
         std::cout << "filter_bspline: " << out.result.size() << " pts (in 20)\n";
     }
 
+    // 路径分段:折线(直线段+角点+直线段)应产生 >=2 段;段选 0 只输出第 0 段;
+    // 全路径(-1)透传点数不变;meta 带 segments。
+    {
+        std::vector<sa::RobotPointEx> fold;
+        for (int i = 0; i <= 10; ++i) fold.emplace_back(i * 10.0f, 0.0f, 0.0f);       // x 轴直线
+        for (int i = 1; i <= 10; ++i) fold.emplace_back(100.0f, i * 10.0f, 0.0f);     // 90° 转向 y 轴
+        FilterRequest r; r.node_type = "filter_path_segmentor"; r.points = fold;
+        r.params["output_segment"] = -1.0;
+        auto all = runFilter(r);
+        assert(all.result.size() == fold.size());          // 全路径透传
+        int nseg = static_cast<int>(all.meta["segments"].size());
+        assert(nseg >= 2);                                  // 直线+直线 至少 2 段
+        std::cout << "filter_path_segmentor: " << nseg << " segments, passthrough " << all.result.size() << " pts\n";
+
+        r.params["output_segment"] = 0.0;
+        auto seg0 = runFilter(r);
+        const auto& s0 = all.meta["segments"][0];
+        assert(seg0.result.size() == static_cast<size_t>(s0["end"].get<int>() - s0["start"].get<int>() + 1));
+        std::cout << "filter_path_segmentor: seg0 " << seg0.result.size() << " pts\n";
+    }
+
     std::cout << "test_filter_adapter OK\n";
     return 0;
 }

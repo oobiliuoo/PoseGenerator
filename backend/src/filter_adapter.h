@@ -13,6 +13,8 @@ struct FilterRequest {
 
 struct FilterResponse {
     std::vector<sa::RobotPointEx> result;
+    // 分析类节点的附加结果(如 path_segmentor 的分段表);普通 filter 为空对象。
+    nlohmann::json meta = nlohmann::json::object();
 };
 
 // Parse {node_type, input:{points}, params} -> FilterRequest.

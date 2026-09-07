@@ -62,14 +62,7 @@ int main() {
             try {
                 FilterResponse resp = runFilter(fr);
                 nlohmann::json out;
-                nlohmann::json arr = nlohmann::json::array();
-                for (const auto& pt : resp.result) {
-                    cv::Point3f pos = pt.toPos();
-                    cv::Point3f rot = pt.toRot();
-                    arr.push_back({{"x",pos.x},{"y",pos.y},{"z",pos.z},
-                                   {"rx",rot.x},{"ry",rot.y},{"rz",rot.z}});
-                }
-                out["output"] = {{"points", arr}, {"meta", nlohmann::json::object()}};
+                out["output"] = serializeFilterResponse(resp);
                 res.set_content(out.dump(), "application/json");
             } catch (const std::exception& e) {
                 res.status = 500;

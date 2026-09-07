@@ -231,6 +231,29 @@ export const NODE_REGISTRY: Record<string, NodeDef> = {
     },
     visualizableMeta: [],
   },
+  filter_path_segmentor: {
+    type: 'filter_path_segmentor',
+    label: '路径分段',
+    category: 'tool',
+    role: 'tool',
+    desc: '按曲率识别角点并划分直线/曲线段,可选段输出',
+    isSource: false, isSink: false,
+    params: [
+      // -1=全路径;0..段数-1 输出单段。拉环 max 由 NodeCard 按结果段数动态限制。
+      { key: 'output_segment', label: 'output_segment', type: 'number', min: -1, max: 64, step: 1, default: -1 },
+      { key: 'curvature_threshold', label: 'curvature_threshold', type: 'number', min: 0, max: 0.5, step: 0.001, default: 0.07 },
+      { key: 'smooth_half_width', label: 'smooth_half_width', type: 'number', min: 0, max: 50, step: 1, default: 2 },
+      { key: 'tangent_smooth_window', label: 'tangent_smooth_window', type: 'number', min: 1, max: 51, step: 1, default: 5, forcedOdd: true },
+      { key: 'min_corner_region_length', label: 'min_corner_region_length', type: 'number', min: 1, max: 50, step: 1, default: 2 },
+      { key: 'straight_curvature_threshold', label: 'straight_curvature_threshold', type: 'number', min: 0, max: 0.5, step: 0.001, default: 0.01 },
+      { key: 'curve_ratio_threshold', label: 'curve_ratio_threshold', type: 'number', min: 0, max: 1, step: 0.01, default: 0.05 },
+    ],
+    async execute(input, params, ctx) {
+      if (!input) return EMPTY_FRAME;
+      return ctx.executeNode('filter_path_segmentor', input, params);
+    },
+    visualizableMeta: [],
+  },
   slice: {
     type: 'slice',
     label: '数据截取',
@@ -309,6 +332,7 @@ const ICON_KEY: Record<string, string> = {
   filter_gaussian: 'wave',
   filter_savgol: 'wave',
   filter_ransac_line: 'ransac',
+  filter_path_segmentor: 'segment',
   slice: 'wave-cut',
 };
 
