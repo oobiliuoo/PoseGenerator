@@ -10,7 +10,7 @@ cd backend
 cmake -B build -S .
 cmake --build build --config RelWithDebInfo
 ```
-产物 `pose_backend.exe` / `test_adapter.exe` 输出到 `backend/runtime/`（独立目录，已 gitignore）。
+产物 `pose_backend.exe` / `test_adapter.exe` / `test_filter_adapter.exe` 输出到 `backend/runtime/`（独立目录，已 gitignore）。
 
 ## 拷贝运行时 DLL
 exe 运行时依赖 nexus `x64/Release/` 下整套 DLL。构建后用一键脚本把顶层 `*.dll` 拷到 `runtime/`：
@@ -45,8 +45,22 @@ cd backend/runtime
 
 运行时依赖 nexus `x64/Release/` 下的整套 DLL（Qt5/OpenCV/Nexus 各 DLL 等），用 `scripts/copy-runtime.ps1` 拷到 `backend/runtime/`，exe 在该目录内直接运行。
 
-filter 节点（filter_distance/angle/mean/gaussian/savgol/stat_outlier/ransac_line）复用同一套 `MultimodalWeldSystem.lib`，无新增链接库。`POST /node/execute` 按 `node_type` 分发到 `filter_adapter`。
+filter 节点(filter_distance/angle/mean/gaussian/savgol/stat_outlier/ransac_line/bspline + 路径分段 filter_path_segmentor)复用同一套 `MultimodalWeldSystem.lib`,无新增链接库。`POST /node/execute` 按 `node_type` 分发到 `filter_adapter`(姿态节点走 `pose_adapter`)。
 
 ## 节点执行接口
-`POST /node/execute`：统一节点执行接口，body `{node_type, input, params}` → `{output}`。第一阶段支持 `node_type=pose_generate`。`POST /generate` 为迁移期兼容保留。
+`POST /node/execute`:统一节点执行接口,body `{node_type, input, params}` → `{output:{points, meta}}`。支持 `node_type`:
+
+- `pose_generate` — `CorrugatedWeldPoseGenerator::generate(points, initial_pose, initial_tangent)`
+- `filter_distance` / `filter_angle` / `filter_mean` / `filter_gaussian` / `filter_savgol` / `filter_stat_outlier` / `filter_ransac_line` — 同名 filter 类 `apply()`
+- `filter_bspline` — `BSplineFilter` B 样条重建(uniform=均匀重采样/逐点投影)
+- `filter_path_segmentor` — `PathSegmentor` 路径分段(分析器:点透传,分段表进 meta;`output_segment` ≥0 时仅输出该段)
+
+`POST /generate` 为迁移期兼容保留。
+
+## 烟雾测试
+```powershell
+cd backend/runtime
+.\test_adapter.exe          # 姿态适配器
+.\test_filter_adapter.exe   # 全部 filter + 路径分段
+```
 

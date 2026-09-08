@@ -288,13 +288,15 @@ choose argmin(dist_orig, dist_alt)
 ```cpp
 std::vector<sa::RobotPointEx> generate(
     const std::vector<sa::RobotPointEx>& points,
-    const cv::Point3f& initial_pose);
+    const cv::Point3f& initial_pose,
+    const cv::Point3f& initial_tangent = {0, 0, 0});
 ```
 
 | 参数 | 类型 | 说明 |
 |------|------|------|
 | `points` | `vector<RobotPointEx>` | 输入路径点序列，仅使用位置信息（x, y, z），姿态信息被忽略。至少需要 3 个点。 |
 | `initial_pose` | `cv::Point3f` | 初始姿态，欧拉角（度），ZYX 旋转顺序。作为第一个点的参考姿态。 |
+| `initial_tangent` | `cv::Point3f` | 可选(默认 `{0,0,0}`)。初始姿态对应的切线方向(焊枪前进方向)。非零时,旋转初始姿态对齐路径实际起始切线方向,用于起点姿态与进给方向一致的场景。 |
 
 | 返回值 | 说明 |
 |--------|------|
@@ -503,11 +505,31 @@ constexpr double kParallelThreshold = 0.999999;  // cos(0.08°)
 
 ---
 
-## 9. 版本历史
+## 9. PathSegmentor 路径分段器
+
+姿态生成内部的分段链路(闭合检测/切向量/曲率/角点/分段)已提取为独立的 `mws::PathSegmentor`(`tool/PathSegmentor.h`),可单独使用:
+
+```cpp
+mws::PathSegmentor seg;
+seg.setParams(sp);                                  // 参数与姿态生成的分段参数同源
+auto r = seg.segment(positions);                    // 输入 vector<cv::Point3f>(仅位置)
+// r.segments    — 全覆盖分段列表 {start, end, type}
+// r.is_corner / r.is_transition / r.tangents
+// r.is_closed / r.transition_ratio
+```
+
+- **分段语义(当前版本)**:`segments` 为**全覆盖**——非过渡区段按弯曲点占比分类 LINE/CURVE,过渡区连续区间作为 CURVE 段插入,各段首尾连续拼接覆盖 `[0, N-1]`,点数之和等于输入总点数。
+- 老版本过渡区不生成段(分段间留空洞);本工具的段选输出(`filter_path_segmentor` 节点)按闭区间 `[start, end]` 切片,两种语义均兼容。
+
+---
+
+## 10. 版本历史
 
 | 版本 | 日期 | 变更 |
 |------|------|------|
-| 1.0 | — | 初始版本，支持分段模式和全曲线模式 |
+| 1.2 | 2026-09-07 | 分段链路提取为独立 `PathSegmentor` 类;分段改全覆盖语义(过渡区成 CURVE 段) |
+| 1.1 | 2026-09-04 | `generate()` 新增第三参数 `initial_tangent`(初始切线方向对齐);RMF 姿态重写 |
+| 1.0 | — | 初始版本,支持分段模式和全曲线模式 |
 
 ---
 
