@@ -155,7 +155,7 @@ PoseGenerator/
 | node/execute JSON | `{node_type, input:{points}, params}` → `{output:{points, meta}}` |
 | 姿态透传 | filter 类节点不碰 `rx/ry/rz`,原样搭便车(RANSAC 投影除外,UI 有警告) |
 | 流水线持久化 | 结构进 localStorage,CSV 文本进 IndexedDB(key=流水线名) |
-| 节点链 ↔ MWS 互导 | 前端 `pipelineCodec.ts` 双向转换 `MWS_PathFilterAndPoseGenerator` 序列化文件;屏蔽节点不导出,csv/pathview 节点导出时自动补齐 |
+| 节点链 ↔ MWS 互导 | 后端 `/pipeline/serialize|deserialize` 直接调库 `toJson`/`analysisJson`,格式与生产一致;屏蔽节点不导出,csv/pathview 节点导出时自动补齐 |
 | 算法下限 | `points.size() ≥ 3`(否则库原样返回,前端会阻止并提示) |
 
 ---

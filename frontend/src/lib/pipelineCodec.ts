@@ -1,7 +1,8 @@
-// 前端节点链 <-> mws::MWS_PathFilterAndPoseGenerator 序列化文件互转。
-// 库格式(JsonFileInterface): {"pipeline":{filters:[{name,config},...]}, "pose":{8参数}}
-// 只覆盖库支持的 8 个 filter + pose 参数;csv_input/pathview_export/slice 等
-// 前端节点不进序列化文件;导入时自动补 csv_input 开头、pathview_export 结尾。
+// 前端节点链 <-> mws::MWS_PathFilterAndPoseGenerator 序列化互导。
+// 序列化/反序列化直接调后端 /pipeline/serialize|deserialize,内部走库
+// CascadeRbtPathFilter + CorrugatedWeldPoseGenerator 的 toJson/analysisJson——
+// 格式与生产完全一致(bool 字段、key 命名、默认值补全都由库负责)。
+// 本文件只做:请求组装(前端 key)与响应映射(库 config -> 前端 params)。
 import type { Pipeline, PipelineNode } from '../types';
 import { defaultParamsFor } from './nodeRegistry';
 
@@ -16,79 +17,81 @@ const NAME_TO_TYPE: Record<string, string> = {
   RansacLineFilter: 'filter_ransac_line',
   BSplineFilter: 'filter_bspline',
 };
-const TYPE_TO_NAME = Object.fromEntries(Object.entries(NAME_TO_TYPE).map(([k, v]) => [v, k]));
 
-// 前端参数 key -> 库 config key(仅列不同的;同名省略)
+// 前端参数 key -> 库 config key(仅列不同的;同名省略)。decode 映射用。
 const PARAM_KEY_MAP: Record<string, Record<string, string>> = {
   filter_distance: { min_th: 'minDistanceThreshold', max_th: 'maxDistanceThreshold' },
   filter_bspline: { Tol3D: 'tol3d', degMin: 'deg_min' },
 };
-// 反转供导入用
 const PARAM_KEY_REV: Record<string, Record<string, string>> = Object.fromEntries(
   Object.entries(PARAM_KEY_MAP).map(([t, m]) => [t, Object.fromEntries(Object.entries(m).map(([a, b]) => [b, a]))]),
 );
 
-// 库 pose Params 默认值(与 CorrugatedWeldPoseGenerator::Params 一致)
-const POSE_DEFAULTS: Record<string, number> = {
-  curvature_threshold: 0.07,
-  smooth_half_width: 2,
-  tangent_smooth_window: 5,
-  min_corner_region_length: 2,
-  output_mode: 0,
-  max_pose_change_angle: 45.0,
-  all_curve_threshold: 0.8,
-  keypoint_pose_angle_threshold: 5.0,
-};
+// 库 pose Params 8 字段(与 CorrugatedWeldPoseGenerator::Params 一致)。
+// 前端 pose_generate 节点额外有 init_* 参数,不进序列化文件。
+const POSE_KEYS = [
+  'curvature_threshold', 'smooth_half_width', 'tangent_smooth_window',
+  'min_corner_region_length', 'output_mode', 'max_pose_change_angle',
+  'all_curve_threshold', 'keypoint_pose_angle_threshold',
+];
 
-/** 导出:节点链 -> 序列化 JSON 对象。屏蔽节点跳过;无 pose 节点用库默认值。 */
-export function encodePipeline(pipeline: Pipeline): Record<string, unknown> {
-  const filters: unknown[] = [];
-  let pose: Record<string, number> = { ...POSE_DEFAULTS };
-  for (const n of pipeline.nodes) {
-    if (n.enabled === false) continue;  // 屏蔽节点不导出
-    if (TYPE_TO_NAME[n.type]) {
-      const map = PARAM_KEY_MAP[n.type] ?? {};
-      const config: Record<string, number> = {};
-      const def = n.params;
-      for (const [k, v] of Object.entries(def)) {
-        config[map[k] ?? k] = v;
-      }
-      filters.push({ name: TYPE_TO_NAME[n.type], config });
-    } else if (n.type === 'pose_generate') {
-      pose = { ...pose, ...n.params };  // init_rx 等额外字段会混进来,剔除:
-      for (const k of Object.keys(pose)) {
-        if (!(k in POSE_DEFAULTS)) delete pose[k];
-      }
-    }
-    // csv_input / pathview_export / slice 等不导出
+async function postJson(url: string, body: unknown): Promise<any> {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}));
+    throw new Error((e as any).error || `${url} failed: ${res.status}`);
   }
-  return { pipeline: { filters }, pose };
+  return res.json();
 }
 
-/** 导入:序列化 JSON -> 完整节点链(csv_input 开头 + filters + pose_generate + pathview_export 结尾)。 */
-export function decodePipeline(json: Record<string, any>): PipelineNode[] {
+/** 组装 /pipeline/serialize 请求体:跳过屏蔽节点;csv/pathview/segmentor 不进库链;pose 剔除 init_*。 */
+export function toSerializeReq(pipeline: Pipeline): { nodes: { type: string; params: Record<string, number> }[]; pose: Record<string, number> } {
+  const nodes: { type: string; params: Record<string, number> }[] = [];
+  let pose: Record<string, number> = {};
+  for (const n of pipeline.nodes) {
+    if (n.enabled === false) continue;
+    if (n.type.startsWith('filter_') && n.type !== 'filter_path_segmentor') {
+      nodes.push({ type: n.type, params: { ...n.params } });
+    } else if (n.type === 'pose_generate') {
+      for (const k of POSE_KEYS) {
+        if (k in n.params) pose[k] = n.params[k];
+      }
+    }
+  }
+  return { nodes, pose };
+}
+
+/** 库回显({filters:[{name,config}], pose}) -> 完整节点链(csv 开头 + filters + pose + pathview 结尾)。 */
+export function fromDeserializeResp(resp: Record<string, any>): PipelineNode[] {
   const nodes: PipelineNode[] = [];
-  const mk = (type: string, params?: Record<string, number>): PipelineNode => {
-    const base = { id: `${type}_${Math.random().toString(36).slice(2, 6)}`, type, params: params ?? defaultParamsFor(type) };
-    return base;
-  };
+  const mk = (type: string, params?: Record<string, number>): PipelineNode => ({
+    id: `${type}_${Math.random().toString(36).slice(2, 6)}`,
+    type,
+    params: params ?? defaultParamsFor(type),
+  });
   nodes.push(mk('csv_input'));
-  const filterArr = json?.pipeline?.filters;
+  const filterArr = resp?.filters;
   if (Array.isArray(filterArr)) {
     for (const f of filterArr) {
       const type = NAME_TO_TYPE[f?.name];
-      if (!type) continue;  // 未知 filter 跳过
+      if (!type) continue;  // 未知 filter 跳过(库 analysisJson 也跳)
       const map = PARAM_KEY_REV[type] ?? {};
       const params: Record<string, number> = defaultParamsFor(type);
       for (const [libKey, v] of Object.entries(f?.config ?? {})) {
-        if (typeof v === 'number') params[map[libKey] ?? libKey] = v;
+        const key = map[libKey] ?? libKey;
+        if (typeof v === 'number') params[key] = v;
+        else if (typeof v === 'boolean') params[key] = v ? 1 : 0;  // 库 bool 字段还原 0/1
       }
       nodes.push(mk(type, params));
     }
   }
   const poseParams = { ...defaultParamsFor('pose_generate') };
-  if (json?.pose && typeof json.pose === 'object') {
-    for (const [k, v] of Object.entries(json.pose)) {
+  if (resp?.pose && typeof resp.pose === 'object') {
+    for (const [k, v] of Object.entries(resp.pose)) {
       if (typeof v === 'number' && k in poseParams) poseParams[k] = v;
     }
   }
@@ -97,9 +100,20 @@ export function decodePipeline(json: Record<string, any>): PipelineNode[] {
   return nodes;
 }
 
+/** 导出:调后端走库 toJson,返回权威序列化对象(直接落文件)。 */
+export async function encodePipeline(pipeline: Pipeline): Promise<Record<string, unknown>> {
+  return postJson('/pipeline/serialize', toSerializeReq(pipeline));
+}
+
+/** 导入:原文发后端走库 analysisJson 解析,再映射回前端节点链。 */
+export async function decodePipeline(json: Record<string, any>): Promise<PipelineNode[]> {
+  const resp = await postJson('/pipeline/deserialize', json);
+  return fromDeserializeResp(resp);
+}
+
 /** 下载序列化文件(文件名按当前流水线名)。 */
-export function downloadPipelineJson(pipeline: Pipeline): void {
-  const obj = encodePipeline(pipeline);
+export async function downloadPipelineJson(pipeline: Pipeline): Promise<void> {
+  const obj = await encodePipeline(pipeline);
   const safe = (pipeline.name || 'pipeline').replace(/[\\/:*?"<>|]/g, '_');
   const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json;charset=utf-8;' });
   const url = URL.createObjectURL(blob);

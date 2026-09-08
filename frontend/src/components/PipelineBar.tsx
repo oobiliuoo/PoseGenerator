@@ -46,11 +46,11 @@ export function PipelineBar(props: Props) {
   const onImportFile = async (f: File) => {
     try {
       const text = await readPipelineJson(f);
-      const nodes = decodePipeline(JSON.parse(text));
+      const nodes = await decodePipeline(JSON.parse(text));
       if (nodes.length === 0) return;
       props.onImportNodes(nodes);
     } catch {
-      // 文件损坏/格式不对:静默忽略(浏览器 file input 无法弹自定义错误)
+      // 文件损坏/后端不可达:静默忽略
     }
   };
 
@@ -87,7 +87,7 @@ export function PipelineBar(props: Props) {
           <Icon name="save" size={14} /><span>保存当前</span>
         </button>
       )}
-      <button onClick={() => downloadPipelineJson(current)} title="导出为 MWS_PathFilterAndPoseGenerator 序列化文件">
+      <button onClick={() => downloadPipelineJson(current).catch(err => console.error('导出失败', err))} title="导出为 MWS_PathFilterAndPoseGenerator 序列化文件">
         <span>导出</span>
       </button>
       <button onClick={() => importFileRef.current?.click()} title="从序列化文件快速构建节点链">

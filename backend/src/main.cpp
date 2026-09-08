@@ -126,6 +126,31 @@ int main() {
         }
     });
 
+    // 节点链 <-> MWS_PathFilterAndPoseGenerator 序列化互导(直接用库 toJson/analysisJson)
+    svr.Post("/pipeline/serialize", [](const httplib::Request& req, httplib::Response& res) {
+        nlohmann::json body;
+        try {
+            body = nlohmann::json::parse(req.body);
+            nlohmann::json out = runPipelineSerialize(body);
+            res.set_content(out.dump(), "application/json");
+        } catch (const std::exception& e) {
+            res.status = 500;
+            res.set_content(std::string("{\"error\":\"") + e.what() + "\"}", "application/json");
+        }
+    });
+
+    svr.Post("/pipeline/deserialize", [](const httplib::Request& req, httplib::Response& res) {
+        nlohmann::json body;
+        try {
+            body = nlohmann::json::parse(req.body);
+            nlohmann::json out = runPipelineDeserialize(body);
+            res.set_content(out.dump(), "application/json");
+        } catch (const std::exception& e) {
+            res.status = 500;
+            res.set_content(std::string("{\"error\":\"") + e.what() + "\"}", "application/json");
+        }
+    });
+
     std::cout << "pose_backend listening on http://localhost:8220\n";
     svr.listen("0.0.0.0", 8220);
     return 0;
