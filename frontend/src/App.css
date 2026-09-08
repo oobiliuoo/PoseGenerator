@@ -221,7 +221,26 @@ header h1 .sub {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  min-height: 0;
 }
+/* 左侧节点链面板:限高视口,面板体内部滚动,滚轮不外溢到页面 */
+.left > .panel {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: calc(100vh - 188px);   /* header 56 + 上下留白/操作栏 ≈ 188,同右侧 table-panel 预算 */
+}
+.left > .panel > .panel-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;      /* 滚到边界也不把滚动链传给 body */
+}
+.left > .panel > .panel-body::-webkit-scrollbar { width: 8px; }
+.left > .panel > .panel-body::-webkit-scrollbar-track { background: transparent; }
+.left > .panel > .panel-body::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+.left > .panel > .panel-body::-webkit-scrollbar-thumb:hover { background: var(--line-bright); }
 .right {
   display: grid;
   grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
@@ -277,6 +296,41 @@ header h1 .sub {
 .all-card-body .preview-toolbar { display: none; }  /* 小图隐藏工具条,节省空间 */
 /* Preview panel: natural height, no stretch */
 .right .preview-panel { align-self: start; }
+/* 单节点视图:两面板与左侧节点链面板同高(同 188 预算),投影区填充面板高 */
+.right--single {
+  height: calc(100vh - 188px);       /* 行高显式化,子项 stretch 才有确定高度 */
+  grid-template-rows: minmax(0, 1fr);
+}
+.right--single .preview-panel,
+.right--single .table-panel {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: calc(100vh - 188px);
+}
+.right--single .preview-panel > .panel-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.right--single .preview {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.right--single .preview-frame {
+  flex: 1 1 auto;
+  aspect-ratio: auto;              /* 不锁 4:3,随面板高拉伸 */
+  max-height: none;
+  height: auto;
+}
+.right--single .preview2d {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+}
 /* Table panel: stretch to the row, internal scroll.
    max-height caps it to the viewport so the table scrolls internally
    instead of growing the page (which left wheel events with nothing
