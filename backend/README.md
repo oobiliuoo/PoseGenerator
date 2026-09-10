@@ -57,6 +57,14 @@ filter 节点(filter_distance/angle/mean/gaussian/savgol/stat_outlier/ransac_lin
 
 `POST /generate` 为迁移期兼容保留。
 
+## 节点链序列化接口
+直接调库 `toJson`/`analysisJson`(`MWS_PathFilterAndPoseGenerator` 同款格式),与生产完全一致:
+
+- `POST /pipeline/serialize`:body `{nodes:[{type, params}], pose:{8参数}}` → `{"pipeline":CascadeRbtPathFilter::toJson(), "pose":Params}`。filter 实例由 `makeFilter`(前端 node_type + 前端参数)构造后 `addFilter` 注入;`filter_path_segmentor` 等分析器不进库链。
+- `POST /pipeline/deserialize`:body 库 JSON → `CascadeRbtPathFilter::analysisJson(pipeline)` 重建链(未知 filter 跳过、字段严格按库类型如 BSpline `uniform`/Ransac `enableProjection` 必须为 boolean)→ `toJson` 权威回显 `{filters, pose}`。
+
+注意:嵌套 `CorrugatedWeldPoseGenerator::Params::toJson/fromJson` 未被 lib 导出,pose 段在 adapter 内按库实现逐字段对齐(8 个字段全 number)。
+
 ## 烟雾测试
 ```powershell
 cd backend/runtime

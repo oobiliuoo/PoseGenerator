@@ -48,7 +48,7 @@ npm run dev
 # → http://localhost:5174
 ```
 
-Vite proxy 把 `/generate`、`/health` 转发到 8220,`/api/paths` 转发到 3001,**浏览器侧零跨域**。详见 [`frontend/README.md`](frontend/README.md)。
+Vite proxy 把 `/generate`、`/health`、`/node/execute`、`/pipeline/*` 转发到 8220,`/api/paths` 转发到 3001,**浏览器侧零跨域**。详见 [`frontend/README.md`](frontend/README.md)。
 
 ### ③ 验证
 
@@ -90,6 +90,8 @@ Vite proxy 把 `/generate`、`/health` 转发到 8220,`/api/paths` 转发到 300
 | `GET` | `/health` | 健康检查;前端 5s 心跳,Header 状态点 |
 | `POST` | `/generate` | 调库 `generate()`,返回每点完整位姿(迁移期兼容保留) |
 | `POST` | `/node/execute` | 统一节点执行:`{node_type, input, params}` → `{output:{points, meta}}`,按 `node_type` 分发 |
+| `POST` | `/pipeline/serialize` | 节点链 → 库 `toJson()` 序列化:`{nodes:[{type,params}], pose}` → `MWS_PathFilterAndPoseGenerator` 权威格式 |
+| `POST` | `/pipeline/deserialize` | 库 JSON → `analysisJson()` 按库规则解析后权威回显:`{filters:[{name,config}], pose}`(未知 filter 跳过,缺省补库默认) |
 
 `node_type` 一览:`pose_generate` + `filter_distance / filter_angle / filter_mean / filter_gaussian / filter_savgol / filter_stat_outlier / filter_ransac_line / filter_bspline / filter_path_segmentor`。csv_input、slice、pathview_export 为纯前端节点,不发请求。
 
@@ -116,13 +118,13 @@ PoseGenerator/
 │   ├── README.md                              # 构建 / 运行 / 链接库清单 / 故障排查
 │   ├── third_party/                           # cpp-httplib · nlohmann/json(单头文件)
 │   └── src/
-│       ├── main.cpp                           # /health + /generate + /node/execute 分发
+│       ├── main.cpp                           # /health + /generate + /node/execute + /pipeline/* 分发
 │       ├── pose_adapter.h / .cpp              # pose_generate 节点:调 CorrugatedWeldPoseGenerator
 │       ├── filter_adapter.h / .cpp            # filter_* 节点:8 滤波 + 路径分段
 │       └── tests/                             # test_adapter(姿态) / test_filter_adapter(滤波)
 ├── frontend/                                  # React 前端
 │   ├── README.md                              # 脚本 / Vite proxy / 目录 / 键盘快捷键
-│   ├── vite.config.ts                         # proxy: /generate /node/execute→8220, /api/paths→3001
+│   ├── vite.config.ts                         # proxy: /generate /node/execute /pipeline/*→8220, /api/paths→3001
 │   ├── public/                                # 示例 CSV:corrugated_sample.csv 等
 │   └── src/
 │       ├── App.tsx                            # 节点链 + 结果双栏,底部操作栏

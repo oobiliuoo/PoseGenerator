@@ -35,7 +35,8 @@
   - `toPos()` → `cv::Point3f`（位置）；`toRot()` → `cv::Point3f`（姿态）。
 - `sa::PointList = std::vector<RobotPointEx>`。
 - `_MWS_API` = `__declspec(dllexport/dllimport)`（消费 DLL 时不定义 `MWS_API`，`_MWS_API` 自动是 dllimport）。
-- 库内部 `Json` 类型（`Json_Base.h`）≠ nlohmann::json——后端 adapter 用 nlohmann::json，参数手动按字段解码（别直接喂库的 fromJson，除非已确认 Json 类型兼容）。
+- **库 `Json` 类型（`Toolkit/include/Json_Base.h`）= `using Json = nlohmann::json;`——与后端 nlohmann 直接互喂**，库对象的 `toJson()/analysisJson()` 产物可直接当 nlohmann 用。注意 `analysisJson(Json&)` 收**非 const 左值引用**，const 入参要先拷一份。
+- **嵌套结构成员函数可能未被 lib 导出**：`CorrugatedWeldPoseGenerator::Params::toJson/fromJson` 在 lib 中无符号（LNK2019），尽管级联链 `CascadeRbtPathFilter::toJson/analysisJson` 与各 filter 的都正常导出。遇到就照库 cpp 逐字段手动对齐（全 number 字段无类型风险）。
 
 ## 已知坑（适配时逐一核对）
 
@@ -45,7 +46,7 @@
 4. **`RansacLineFilter` `enableProjection=true` 时调 `setRobotPoint(proj)`**——`proj` 是仅位置的 `RobotPoint`，会**清零姿态**。UI 标注"启用投影会清空姿态数据"。
 5. **`DistanceFilter` 默认 `max_th=30.0`**——对宽间距路径（如 100mm 点距）会把点全过滤掉。默认值照搬库构造，但 UI 提示或建议用户调大。
 6. **`MeanSmoothingFilter` 依赖 `nanoflann.hpp`**（`include/tool/`，已在 include 路径）。共线点数据可能触发异常，测试用非共线点。
-7. **filter 的 `toJson/analysisJson`** 用 nexus `Json` 类型，不直接用于前端参数（前端 localStorage 存 `Record<string, number>`）。参数 schema 照 `analysisJson` 的字段名对齐，但后端 adapter 手动按 key 取值。
+7. **filter 的 `toJson/analysisJson` 有严格类型**：nlohmann `get<bool>()` 对 number 抛 `type_error.302`（BSpline `uniform`、Ransac `enableProjection` 均为 bool）。**节点链导出/导入走后端 `/pipeline/serialize|deserialize` 直调库 toJson/analysisJson**（见 filter_adapter.cpp `runPipelineSerialize/Deserialize`），前端只做 key/bool 映射——不要在 JS 手搓格式。
 8. **`generate()` 类算法只收位置**：`CorrugatedWeldPoseGenerator::generate(points, initial_pose)` 的 `points` 仅用位置，姿态被忽略。pose_generate 节点的 initial_pose 从 `params` 取，不从 input frame 取（input 姿态字段忽略）。
 
 ## filter 契约（基类 NexusFilterInterface<T>）
