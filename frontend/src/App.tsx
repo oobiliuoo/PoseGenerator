@@ -85,7 +85,7 @@ export default function App() {
 
         <main className={`right right--${viewMode}`}>
           {viewMode === 'single'
-            ? <NodeResult frame={selectedOutput} loading={loading} nodeName={selectedNodeName} plane={plane} showPose={showPose} />
+            ? <NodeResult key={selectedNodeId ?? 'none'} frame={selectedOutput} loading={loading} nodeName={selectedNodeName} plane={plane} showPose={showPose} />
             : <AllNodesView
                 nodes={pipeline.nodes}
                 outputs={outputs}

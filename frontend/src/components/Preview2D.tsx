@@ -49,8 +49,10 @@ export const PLANE_LABELS: Record<Plane, string> = {
   yz: 'YZ 侧视',
 };
 
-export function Preview2D({ points, plane, showPose }: Props & { plane: Plane; showPose: boolean }) {
+export function Preview2D({ points, plane, showPose, highlightIndex = null }: Props & { plane: Plane; showPose: boolean; highlightIndex?: number | null }) {
   const geom = useMemo(() => project(points, plane), [points, plane]);
+  const hl = highlightIndex != null && highlightIndex >= 0 && geom && highlightIndex < geom.length
+    ? highlightIndex : null;
 
   return (
     <div className="preview">
@@ -72,12 +74,15 @@ export function Preview2D({ points, plane, showPose }: Props & { plane: Plane; s
           />
           {geom.map((g, i) => {
             const len = Math.hypot(g.dx, g.dy);
+            const picked = i === hl;
+            // 选中时该点的姿态方向线与点同色(青色),其余保持琥珀
+            const color = picked ? '#22d3ee' : '#ffb627';
             return (
               <g key={i}>
-                <circle cx={g.X} cy={g.Y} r={3} fill="#ffb627" stroke="#0a0c0f" strokeWidth={1} />
+                <circle cx={g.X} cy={g.Y} r={picked ? 4.5 : 3} fill={color} stroke="#0a0c0f" strokeWidth={1} />
                 {showPose && len >= 1e-3 && (
                   <line x1={g.X} y1={g.Y} x2={g.X + g.dx} y2={g.Y + g.dy}
-                    stroke="#ffb627" strokeWidth={2} opacity={0.8} />
+                    stroke={color} strokeWidth={picked ? 2.5 : 2} opacity={picked ? 1 : 0.8} />
                 )}
               </g>
             );

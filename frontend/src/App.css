@@ -818,6 +818,15 @@ select:focus { border-color: var(--arc); }
 }
 .pose-table td:first-child { text-align: center; color: var(--ink-faint); }
 .pose-table tbody tr:hover { background: rgba(34, 211, 238, 0.04); }
+/* 选中行:琥珀描边,与 2D 投影高亮联动 */
+.pose-table tbody tr { cursor: pointer; }
+.pose-table tbody tr.is-picked,
+.pose-table tbody tr.is-picked:hover {
+  background: rgba(255, 182, 39, 0.12);
+  box-shadow: inset 2px 0 0 var(--arc);
+}
+.pose-table tbody tr.is-picked td { color: var(--ink); }
+.pose-table tbody tr.is-picked td:first-child { color: var(--arc); font-weight: 600; }
 
 /* table empty state */
 .table-empty {
