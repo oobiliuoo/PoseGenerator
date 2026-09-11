@@ -57,8 +57,7 @@ export function parseCsvPoints(text: string): CsvParseResult {
   let xCol = 0, yCol = 1, zCol = 2;
   let rxCol = -1, ryCol = -1, rzCol = -1;
   let mapping: CsvParseResult['mapping'];
-  if (isHeader) {
-    const cols = first;
+  if (isHeader) {    const cols = first;
     const mx = findColumn(cols, POSITION_ALIASES.x);
     const my = findColumn(cols, POSITION_ALIASES.y);
     const mz = findColumn(cols, POSITION_ALIASES.z);
@@ -77,6 +76,10 @@ export function parseCsvPoints(text: string): CsvParseResult {
     if (mry) ryCol = cols.indexOf(mry);
     if (mrz) rzCol = cols.indexOf(mrz);
     mapping = { x: mx, y: my, z: mz, rx: mrx, ry: mry, rz: mrz };
+  } else if (first.length >= 6) {
+    // 无表头:位置取前 3 列;列数 ≥6 时按约定取第 4-6 列为姿态
+    // (机器人点位 CSV 常见布局:x,y,z,rx,ry,rz[,外部轴...])
+    rxCol = 3; ryCol = 4; rzCol = 5;
   }
 
   const hasRot = rxCol >= 0 && ryCol >= 0 && rzCol >= 0;

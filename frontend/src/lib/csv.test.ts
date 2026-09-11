@@ -55,4 +55,17 @@ assert(rot0.rz === 90, 'yaw → rz = 90');
 r = parseCsvPoints('x,y,z\n1,2,3');
 assert(r.rotations === null, 'no rotation columns → null');
 
+// 11. Headerless 6+ columns → first 3 position, next 3 rotation (robot point layout).
+const r11 = parseCsvPoints('-747.746,-556.704,1746.88,-180,-40,99.82,-1404.92,0,0,0,255,0\n-747.754,-556.676,1746.57,-179,-39,98.5,0,0');
+assert(r11.points.length === 2, 'headerless 6+: 2 points');
+assert(r11.points[0].x === -747.746 && r11.points[0].z === 1746.88, 'headerless 6+: position = first 3');
+assert(r11.rotations !== null, 'headerless 6+: rotations parsed');
+assert(r11.rotations![0].rx === -180 && r11.rotations![0].ry === -40 && r11.rotations![0].rz === 99.82,
+  'headerless 6+: rotation = cols 4-6');
+assert(r11.rotations![1].rz === 98.5, 'headerless 6+: short trailing cols still parse rotation');
+
+// 12. Headerless with fewer than 6 columns → no rotation (position only).
+const r12 = parseCsvPoints('1,2,3,4,5\n6,7,8,9,10');
+assert(r12.points.length === 2 && r12.rotations === null, 'headerless <6 cols: no rotation');
+
 console.log('csv.test OK');
