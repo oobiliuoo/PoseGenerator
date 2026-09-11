@@ -30,6 +30,9 @@ export async function sendToPathview(points: PosePoint[], sourceFile: string): P
   return data.id as number;
 }
 
+const PATHVIEW_WINDOW = 'pathview';
+
 export function openPathview(): void {
-  window.open('http://localhost:5173', '_blank');
+  // 命名窗口:已存在则复用(重新导航刷新到列表)并聚焦,不重复开新页
+  window.open('http://localhost:5173', PATHVIEW_WINDOW)?.focus();
 }
