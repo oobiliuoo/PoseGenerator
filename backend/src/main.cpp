@@ -70,7 +70,7 @@ int main() {
             }
             return;
         }
-        if (node_type != "pose_generate") {
+        if (node_type != "pose_generate" && node_type != "streaming_pose_generate") {
             res.status = 400;
             res.set_content("{\"error\":\"unknown node_type\"}", "application/json");
             return;
@@ -79,6 +79,7 @@ int main() {
         // then reuse the existing adapter. input.points -> points (pos only),
         // input pose fields ignored; params passed through.
         nlohmann::json genReq;
+        genReq["node_type"] = node_type;
         genReq["points"] = body.value("input", nlohmann::json::object()).value("points", nlohmann::json::array());
         nlohmann::json params = body.value("params", nlohmann::json::object());
         genReq["initial_pose"] = params.value("initial_pose", nlohmann::json::object());

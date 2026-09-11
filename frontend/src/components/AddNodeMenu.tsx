@@ -41,8 +41,17 @@ const ICONS: Record<string, ReactNode> = {
       {[{x:7,y:9},{x:11,y:13},{x:14,y:7},{x:17,y:15}].map(p => <circle key={`${p.x}-${p.y}`} cx={p.x} cy={p.y} r={1.1} fill="currentColor" stroke="none" />)}
     </svg>
   ),
-  segment: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round">
+  stream: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 7 H14" />
+      <path d="M11 4 l3 3 -3 3" />
+      <path d="M3 12 H17" />
+      <path d="M14 9 l3 3 -3 3" />
+      <path d="M3 17 H12" />
+      <path d="M9 14 l3 3 -3 3" />
+    </svg>
+  ),
+  segment: (    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round">
       <path d="M3 16 q3 -6 6 0 M13 16 q3 -6 8 -2" />
       <path d="M9 16 H13" strokeDasharray="2 2" />
       <circle cx={6} cy={13.2} r={1.2} fill="currentColor" stroke="none" />

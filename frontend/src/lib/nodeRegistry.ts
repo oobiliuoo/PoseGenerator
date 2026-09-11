@@ -28,6 +28,12 @@ function packPoseGenParams(p: Record<string, number>): Record<string, any> {
   return { ...algo, initial_pose: { rx: init_rx, ry: init_ry, rz: init_rz }, initial_tangent: { tx: init_tx, ty: init_ty, tz: init_tz } };
 }
 
+// 流式生成器:无 initial_tangent(库只收初始姿态)
+function packStreamingParams(p: Record<string, number>): Record<string, any> {
+  const { init_rx, init_ry, init_rz, ...algo } = p;
+  return { ...algo, initial_pose: { rx: init_rx, ry: init_ry, rz: init_rz } };
+}
+
 export const NODE_REGISTRY: Record<string, NodeDef> = {
   csv_input: {
     type: 'csv_input',
@@ -73,6 +79,31 @@ export const NODE_REGISTRY: Record<string, NodeDef> = {
       return ctx.executeNode('pose_generate', input, packPoseGenParams(params));
     },
     visualizableMeta: [],   // 不改 nexus,无算法中间产物
+  },
+
+  streaming_pose_generate: {
+    type: 'streaming_pose_generate',
+    label: '流式姿态生成',
+    category: 'algorithm',
+    role: 'algorithm',
+    desc: '动态追加点位模式的姿态生成(RMF,无分段)',
+    isSource: false,
+    isSink: false,
+    params: [
+      { key: 'tangent_smooth_window', label: 'tangent_smooth_window', type: 'number', min: 1, max: 51, step: 1, default: 5, forcedOdd: true },
+      { key: 'max_pose_change_angle', label: 'max_pose_change_angle', type: 'number', min: 0, max: 180, step: 0.5, default: 45.0 },
+      { key: 'enable_unwrap', label: 'enable_unwrap', type: 'select', default: 1, options: [{ value: 1, label: '开' }, { value: 0, label: '关' }] },
+      { key: 'init_rx', label: 'init_rx', type: 'number', min: -180, max: 180, step: 0.5, default: DEFAULT_INITIAL_POSE.rx },
+      { key: 'init_ry', label: 'init_ry', type: 'number', min: -180, max: 180, step: 0.5, default: DEFAULT_INITIAL_POSE.ry },
+      { key: 'init_rz', label: 'init_rz', type: 'number', min: -180, max: 180, step: 0.5, default: DEFAULT_INITIAL_POSE.rz },
+    ],
+    async execute(input, params, ctx) {
+      if (!input || input.points.length < 3) {
+        return input ?? EMPTY_FRAME;
+      }
+      return ctx.executeNode('streaming_pose_generate', input, packStreamingParams(params));
+    },
+    visualizableMeta: [],
   },
 
   pathview_export: {
@@ -324,6 +355,7 @@ export interface AddableGroup {
 const ICON_KEY: Record<string, string> = {
   csv_input: 'grid',
   pose_generate: 'axes',
+  streaming_pose_generate: 'stream',
   pathview_export: 'export',
   filter_distance: 'wave-cut',
   filter_angle: 'wave-cut',

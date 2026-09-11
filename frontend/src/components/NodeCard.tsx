@@ -179,6 +179,9 @@ export function NodeCard({ node, output, selected, expanded, onToggleExpanded, o
           {def.type === 'slice' && (frame?.meta as any)?.note && (
             <div className="nc-note">⚠ {(frame?.meta as any).note}</div>
           )}
+          {def.type === 'streaming_pose_generate' && (
+            <div className="nc-note">⚠ 流式语义=全曲线模式:无分段统一姿态、闭合路径无首尾对齐</div>
+          )}
           {def.type === 'filter_path_segmentor' && (frame?.meta as any)?.segments && (
             <div className="nc-seg-summary">
               {((frame!.meta as any).segments as { start: number; end: number; type: string }[])

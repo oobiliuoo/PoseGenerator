@@ -3,6 +3,7 @@
 
 bool parseGenerateRequest(const nlohmann::json& j, GenerateRequest& out) {
     try {
+        out.node_type = j.value("node_type", "pose_generate");
         out.points.clear();
         for (auto& pj : j.at("points")) {
             sa::RobotPointEx pt(
@@ -42,6 +43,14 @@ bool parseGenerateRequest(const nlohmann::json& j, GenerateRequest& out) {
         p.all_curve_threshold = pj.value("all_curve_threshold", 0.8);
         p.keypoint_pose_angle_threshold = pj.value("keypoint_pose_angle_threshold", 5.0);
         out.params = p;
+
+        // 流式参数(仅 streaming_pose_generate 用;缺省照搬库 StreamingParams 默认值)
+        // enable_unwrap 前端传 0/1,不能用 value(key, true)——number 对 bool 默认值会抛 type_error
+        mws::StreamingParams sp;
+        sp.tangent_smooth_window = pj.value("tangent_smooth_window", 5);
+        sp.max_pose_change_angle = pj.value("max_pose_change_angle", 45.0);
+        sp.enable_unwrap = pj.count("enable_unwrap") ? (pj.at("enable_unwrap").get<double>() != 0) : true;
+        out.streaming_params = sp;
         return true;
     } catch (const std::exception&) {
         return false;
@@ -62,9 +71,19 @@ nlohmann::json serializeGenerateResponse(const GenerateResponse& resp) {
 }
 
 GenerateResponse runGenerate(const GenerateRequest& req) {
+    GenerateResponse resp;
+    if (req.node_type == "streaming_pose_generate") {
+        // 流式生成器离线训化:一批喂完即 finalize,再取全部输出。
+        // 语义等价批量的全曲线模式(库文档:开放路径下逐点一致)。
+        mws::StreamingPoseGenerator gen;
+        gen.initialize(req.initial_pose, req.streaming_params);
+        gen.appendPoints(req.points);
+        gen.finalize();
+        resp.result = gen.popOutputs();
+        return resp;
+    }
     mws::CorrugatedWeldPoseGenerator generator;
     generator.setParams(req.params);
-    GenerateResponse resp;
     resp.result = generator.generate(req.points, req.initial_pose, req.initial_tangent);
     return resp;
 }
