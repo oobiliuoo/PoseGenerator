@@ -44,12 +44,13 @@ int main() {
         sreq.node_type = "streaming_pose_generate";
         sreq.points = pts;
         sreq.initial_pose = cv::Point3f(0.0f, 45.0f, 178.0f);
+        sreq.initial_tangent = cv::Point3f(0.0f, 0.0f, 1.0f);   // 显式切线:触发起始姿态对齐
         sreq.streaming_params.tangent_smooth_window = 5;
         sreq.streaming_params.max_pose_change_angle = 45.0;
         sreq.streaming_params.enable_unwrap = true;
 
         mws::StreamingPoseGenerator ref_gen;
-        ref_gen.initialize(sreq.initial_pose, sreq.streaming_params);
+        ref_gen.initialize(sreq.initial_pose, sreq.streaming_params, sreq.initial_tangent);
         ref_gen.appendPoints(sreq.points);
         ref_gen.finalize();
         auto ref_stream = ref_gen.popOutputs();
@@ -73,12 +74,14 @@ int main() {
         sj["points"] = nlohmann::json::array();
         for (auto& p : pts) sj["points"].push_back({{"x", p.x}, {"y", p.y}, {"z", p.z}});
         sj["initial_pose"] = {{"rx", 0.0}, {"ry", 45.0}, {"rz", 178.0}};
+        sj["initial_tangent"] = {{"tx", 0.0}, {"ty", 0.0}, {"tz", 1.0}};
         sj["params"] = {{"tangent_smooth_window", 3}, {"max_pose_change_angle", 30.0}, {"enable_unwrap", 0}};
         GenerateRequest sparsed;
         assert(parseGenerateRequest(sj, sparsed));
         assert(sparsed.node_type == "streaming_pose_generate");
         assert(sparsed.streaming_params.tangent_smooth_window == 3);
         assert(sparsed.streaming_params.enable_unwrap == false);
+        assert(sparsed.initial_tangent.z == 1.0f);
     }
 
     std::cout << "test_adapter OK\n";

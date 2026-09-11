@@ -47,8 +47,8 @@ bool parseGenerateRequest(const nlohmann::json& j, GenerateRequest& out) {
         // 流式参数(仅 streaming_pose_generate 用;缺省照搬库 StreamingParams 默认值)
         // enable_unwrap 前端传 0/1,不能用 value(key, true)——number 对 bool 默认值会抛 type_error
         mws::StreamingParams sp;
-        sp.tangent_smooth_window = pj.value("tangent_smooth_window", 5);
-        sp.max_pose_change_angle = pj.value("max_pose_change_angle", 45.0);
+        sp.tangent_smooth_window = pj.value("tangent_smooth_window", 15);
+        sp.max_pose_change_angle = pj.value("max_pose_change_angle", 15.0);
         sp.enable_unwrap = pj.count("enable_unwrap") ? (pj.at("enable_unwrap").get<double>() != 0) : true;
         out.streaming_params = sp;
         return true;
@@ -76,7 +76,7 @@ GenerateResponse runGenerate(const GenerateRequest& req) {
         // 流式生成器离线训化:一批喂完即 finalize,再取全部输出。
         // 语义等价批量的全曲线模式(库文档:开放路径下逐点一致)。
         mws::StreamingPoseGenerator gen;
-        gen.initialize(req.initial_pose, req.streaming_params);
+        gen.initialize(req.initial_pose, req.streaming_params, req.initial_tangent);
         gen.appendPoints(req.points);
         gen.finalize();
         resp.result = gen.popOutputs();
